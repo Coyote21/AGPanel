@@ -30,7 +30,46 @@ namespace AGPanel
         internal const string MODID = "AGPanel";
         internal const string MODNAME = "AGPanel";
 
-        
+        public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
+            { 0,  KSPActionGroup.None },
+            { 1,  KSPActionGroup.Custom01 },
+            { 2,  KSPActionGroup.Custom02 },
+            { 3,  KSPActionGroup.Custom03 },
+            { 4,  KSPActionGroup.Custom04 },
+            { 5,  KSPActionGroup.Custom05 },
+            { 6,  KSPActionGroup.Custom06 },
+            { 7,  KSPActionGroup.Custom07 },
+            { 8,  KSPActionGroup.Custom08 },
+            { 9,  KSPActionGroup.Custom09 },
+            { 10, KSPActionGroup.Custom10 },
+            { 11, KSPActionGroup.Light },
+            { 12, KSPActionGroup.RCS },
+            { 13, KSPActionGroup.SAS },
+            { 14, KSPActionGroup.Brakes },
+            { 15, KSPActionGroup.Abort },
+            { 16, KSPActionGroup.Gear }
+        };
+
+        public static Dictionary<int, String> dictAGLabels = new Dictionary<int, String> {
+            { 0,  "Stage" },
+            { 1,  "Custom01" },
+            { 2,  "Custom02" },
+            { 3,  "Custom03" },
+            { 4,  "Custom04" },
+            { 5,  "Custom05" },
+            { 6,  "Custom06" },
+            { 7,  "Custom07" },
+            { 8,  "Custom08" },
+            { 9,  "Custom09" },
+            { 10, "Custom10" },
+            { 11, "Light" },
+            { 12, "RCS" },
+            { 13, "SAS" },
+            { 14, "Brakes" },
+            { 15, "Abort" },
+            { 16, "Gear" },
+        };
+
         void Awake()
         {
 
@@ -38,6 +77,8 @@ namespace AGPanel
 
         void Start()
         {
+            Vessel activeVessel = FlightGlobals.ActiveVessel;
+
             baseWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
             AddToolbarButton();
         }
@@ -57,7 +98,7 @@ namespace AGPanel
             if (toolbarControl == null)
             {
                 toolbarControl = gameObject.AddComponent<ToolbarControl>();
-                toolbarControl.AddToAllToolbars(windowToggle, windowToggle,
+                toolbarControl.AddToAllToolbars(WindowToggle, WindowToggle,
                     ApplicationLauncher.AppScenes.FLIGHT,
                     MODID,
                     "AGPanel",
@@ -68,7 +109,7 @@ namespace AGPanel
             }
         }
 
-        void windowToggle()
+        void WindowToggle()
         {
             visible = !visible;
         }
@@ -77,28 +118,25 @@ namespace AGPanel
 
         void DrawWindow(int id)
         {
-            bool activeVessel = (FlightGlobals.ActiveVessel != null);
-
-            bool b = false;
-            GUI.enabled = activeVessel;
+            //bool b = false;
+            GUI.enabled = (FlightGlobals.ActiveVessel != null);
 
             GUILayout.BeginVertical();
             for (int i = 1; i < 5; i++)
             {
                 if (GUILayout.Button("AG" + i))
                 {
-                    b = activateActionGroup(i);
+                    ActivateActionGroup(i);
                 }
             }
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
 
-        private static bool activateActionGroup(int ag)
+        private static void ActivateActionGroup(int agID)
         {
-            //Actiavte AG ag
-
-            return true;
+            //Actiavte Action Group agID
+            FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[agID]);
         }
     }
 
