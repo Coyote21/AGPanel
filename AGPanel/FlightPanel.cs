@@ -14,9 +14,11 @@ namespace AGPanel
     {
         int flightWindowID;
 
-        const float WIDTH = 100;
-        const float HEIGHT = 200;
-        Rect flightWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        //const float WIDTH = 100;
+        //const float HEIGHT = 200;
+        //Rect flightWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+
+        Rect flightWindowPos = new Rect();
 
         Vessel activeVessel;
 

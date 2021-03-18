@@ -68,6 +68,7 @@ namespace AGPanel
 
         void Awake()
         {
+            //Should be here or Start? does it matter?
             //AddToolbarButton();
         }
 

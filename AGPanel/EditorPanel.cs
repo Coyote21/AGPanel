@@ -14,18 +14,41 @@ namespace AGPanel
     {
         int editorWindowID;
 
-        const float WIDTH = 100;
-        const float HEIGHT = 200;
-        Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        const float WIDTH = 300;
+        const float HEIGHT = 300;
+        //Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        Rect editorWindowPos = new Rect();
 
-        Vessel activeVessel;
+        //Vessel activeVessel;
 
+        private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
+        private static Dictionary<int, bool> dictToggles = new Dictionary<int, bool> {
+            { 0,  false },
+            { 1,  false },
+            { 2,  false },
+            { 3,  false },
+            { 4,  false },
+            { 5,  false },
+            { 6,  false },
+            { 7,  false },
+            { 8,  false },
+            { 9,  false },
+            { 10, false },
+            { 11, false },
+            { 12, false },
+            { 13, false },
+            { 14, false },
+            { 15, false },
+            { 16, false },
+        };
+
+        private static Dictionary<int, bool> dictVisible = new Dictionary<int, bool>();
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
         void Start()
         {
-            activeVessel = FlightGlobals.ActiveVessel;
+            //activeVessel = FlightGlobals.ActiveVessel;
 
             editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
         }
@@ -41,16 +64,33 @@ namespace AGPanel
 
         void DrawEditorWindow(int id)
         {
-          
+
+            GUI.enabled = true;
+            GUILayout.Button("HERE");
             GUILayout.BeginVertical();
             for (int i = 1; i < 5; i++)
             {
-                if (GUILayout.Button("AG" + i))
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(String.Format("AG" + i + ": "));
+                AGPanel.dictAGLabels[i] = GUILayout.TextField(AGPanel.dictAGLabels[i], 25);
+                if(GUILayout.Toggle(dictToggles[i], ""))
                 {
-                    UpdateActionGroupLabel(i, "AG" + i);
+                    dictToggles[i] = !dictToggles[i];
                 }
+                //dictToggles[i] = GUILayout.Toggle(dictToggles[i], "T");
+                //dictVisible[i] = GUILayout.Toggle(dictVisible[i], "V");
+                //if (GUILayout.Button("S"))
+                //{
+                //    //UpdateActionGroupLabel(i, dictNewAGLabels[i]);
+                //}
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
+            GUILayout.Button("GONE");
+            if(GUILayout.Toggle(false, "T"))
+            {
+                //dictToggles[i] = !dictToggles[i];
+            }
             GUI.DragWindow();
         }
 
