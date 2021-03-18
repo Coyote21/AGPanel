@@ -14,19 +14,15 @@ using ClickThroughFix;
 
 namespace AGPanel
 {
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
+    // Want to learn why this line borks the KSP GUI so that I can't save games or Quit from the Pause Menu (Specifically in Flight Scene)
+    //[KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.FLIGHT, GameScenes.EDITOR)]  
+    
     public class AGPanel : MonoBehaviour
     {
         ToolbarControl toolbarControl;
-        bool visible = true;
-        int baseWindowID;
-        const float WIDTH = 100;
-        const float HEIGHT = 200;
-
-        Rect windowPosition = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
-
-        internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
-
+        public static bool visible = true;
+        
         internal const string MODID = "AGPanel";
         internal const string MODNAME = "AGPanel";
 
@@ -72,26 +68,13 @@ namespace AGPanel
 
         void Awake()
         {
-
+            //AddToolbarButton();
         }
 
         void Start()
         {
-            Vessel activeVessel = FlightGlobals.ActiveVessel;
-
-            baseWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
             AddToolbarButton();
         }
-
-        void OnGUI()
-        {
-            GUI.skin = HighLogic.Skin;
-            if (visible)
-                windowPosition = ClickThruBlocker.GUILayoutWindow(baseWindowID, windowPosition, DrawWindow, "AGPanel");
-                //windowPosition = GUILayout.Window(baseWindowID, windowPosition, DrawWindow, "AGPanel");
-
-        }
-
 
         void AddToolbarButton()
         {
@@ -99,7 +82,7 @@ namespace AGPanel
             {
                 toolbarControl = gameObject.AddComponent<ToolbarControl>();
                 toolbarControl.AddToAllToolbars(WindowToggle, WindowToggle,
-                    ApplicationLauncher.AppScenes.FLIGHT,
+                    ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
                     MODID,
                     "AGPanel",
                     "AGPanel/Icon/AGPanel-38",
@@ -114,30 +97,7 @@ namespace AGPanel
             visible = !visible;
         }
 
-
-
-        void DrawWindow(int id)
-        {
-            //bool b = false;
-            GUI.enabled = (FlightGlobals.ActiveVessel != null);
-
-            GUILayout.BeginVertical();
-            for (int i = 1; i < 5; i++)
-            {
-                if (GUILayout.Button("AG" + i))
-                {
-                    ActivateActionGroup(i);
-                }
-            }
-            GUILayout.EndVertical();
-            GUI.DragWindow();
-        }
-
-        private static void ActivateActionGroup(int agID)
-        {
-            //Actiavte Action Group agID
-            FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[agID]);
-        }
+        
     }
 
 }

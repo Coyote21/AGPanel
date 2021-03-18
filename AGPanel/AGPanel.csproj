@@ -70,6 +70,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AGPanel.cs" />
+    <Compile Include="EditorPanel.cs" />
+    <Compile Include="FlightPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterToolbar.cs" />
   </ItemGroup>
