@@ -17,11 +17,17 @@ namespace AGPanel
         const float WIDTH = 300;
         const float HEIGHT = 300;
         //Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        
+        //Make window dynamic? not really needed here?
         Rect editorWindowPos = new Rect();
 
         //Vessel activeVessel;
 
         private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
+        
+        
+        // Change these to a single dictionary dictOptions with simple int (bit value) entries?
+        
         private static Dictionary<int, bool> dictToggles = new Dictionary<int, bool> {
             { 0,  false },
             { 1,  false },
@@ -42,7 +48,45 @@ namespace AGPanel
             { 16, false },
         };
 
-        private static Dictionary<int, bool> dictVisible = new Dictionary<int, bool>();
+        private static Dictionary<int, bool> dictSinglePress = new Dictionary<int, bool> {
+            { 0,  false },
+            { 1,  false },
+            { 2,  false },
+            { 3,  false },
+            { 4,  false },
+            { 5,  false },
+            { 6,  false },
+            { 7,  false },
+            { 8,  false },
+            { 9,  false },
+            { 10, false },
+            { 11, false },
+            { 12, false },
+            { 13, false },
+            { 14, false },
+            { 15, false },
+            { 16, false },
+        };
+
+        private static Dictionary<int, bool> dictVisible = new Dictionary<int, bool> {
+            { 0,  false },
+            { 1,  false },
+            { 2,  false },
+            { 3,  false },
+            { 4,  false },
+            { 5,  false },
+            { 6,  false },
+            { 7,  false },
+            { 8,  false },
+            { 9,  false },
+            { 10, false },
+            { 11, false },
+            { 12, false },
+            { 13, false },
+            { 14, false },
+            { 15, false },
+            { 16, false },
+        };
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
@@ -66,8 +110,16 @@ namespace AGPanel
         {
 
             GUI.enabled = true;
-            GUILayout.Button("HERE");
+            //GUILayout.Button("HERE");
             GUILayout.BeginVertical();
+    
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Action Group");
+            GUILayout.Label("T");               // Make button in flight panel a toggle (not implemented but planing ahead)
+            GUILayout.Label("S");               // Remove button from flight after 1st press, to be used for single use AG's
+            GUILayout.Label("V");               // Make button active/visible in flight panel
+            GUILayout.EndHorizontal();
+            
             for (int i = 1; i < 5; i++)
             {
                 GUILayout.BeginHorizontal();
@@ -77,20 +129,20 @@ namespace AGPanel
                 {
                     dictToggles[i] = !dictToggles[i];
                 }
-                //dictToggles[i] = GUILayout.Toggle(dictToggles[i], "T");
-                //dictVisible[i] = GUILayout.Toggle(dictVisible[i], "V");
-                //if (GUILayout.Button("S"))
-                //{
-                //    //UpdateActionGroupLabel(i, dictNewAGLabels[i]);
-                //}
+                if (GUILayout.Toggle(dictSinglePress[i], ""))
+                {
+                    dictSinglePress[i] = !dictSinglePress[i];
+                }
+                if (GUILayout.Toggle(dictVisible[i], ""))
+                {
+                    dictVisible[i] = !dictVisible[i];
+                }
                 GUILayout.EndHorizontal();
             }
+            
             GUILayout.EndVertical();
-            GUILayout.Button("GONE");
-            if(GUILayout.Toggle(false, "T"))
-            {
-                //dictToggles[i] = !dictToggles[i];
-            }
+            //GUILayout.Button("GONE");
+
             GUI.DragWindow();
         }
 

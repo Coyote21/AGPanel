@@ -18,6 +18,7 @@ namespace AGPanel
         //const float HEIGHT = 200;
         //Rect flightWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
 
+        //For dynamic sized winodow
         Rect flightWindowPos = new Rect();
 
         Vessel activeVessel;
@@ -44,8 +45,12 @@ namespace AGPanel
         void DrawFlightWindow(int id)
         {
             GUI.enabled = (FlightGlobals.ActiveVessel != null);
+            var style = new GUIStyle(GUI.skin.button);
+            style.active.textColor = Color.green;
+            //style.active.background = Color.black;
 
             GUILayout.BeginVertical();
+            //Load which buttons-action groups are set to be shown then loop through them
             for (int i = 1; i < 5; i++)
             {
                 if (GUILayout.Button(AGPanel.dictAGLabels[i]))

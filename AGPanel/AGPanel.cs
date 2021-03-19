@@ -15,9 +15,11 @@ using ClickThroughFix;
 namespace AGPanel
 {
     [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
-    // Want to learn why this line borks the KSP GUI so that I can't save games or Quit from the Pause Menu (Specifically in Flight Scene)
+    // Want to learn why this line, instead of KSPAddon, it borks the KSP GUI so that I can't save games or Quit from the Pause Menu (Specifically in Flight Scene)
     //[KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.FLIGHT, GameScenes.EDITOR)]  
     
+    // Need to move this to attach to a module in CommandModule parts so can save changes per vessel.
+
     public class AGPanel : MonoBehaviour
     {
         ToolbarControl toolbarControl;
@@ -26,6 +28,8 @@ namespace AGPanel
         internal const string MODID = "AGPanel";
         internal const string MODNAME = "AGPanel";
 
+        
+        //Dictionary of KSP Action Groups
         public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
             { 0,  KSPActionGroup.None },
             { 1,  KSPActionGroup.Custom01 },
@@ -46,6 +50,7 @@ namespace AGPanel
             { 16, KSPActionGroup.Gear }
         };
 
+        //Dictionary of current Action Group labels. Need to load this save if exist, else defaults.
         public static Dictionary<int, String> dictAGLabels = new Dictionary<int, String> {
             { 0,  "Stage" },
             { 1,  "Custom01" },
