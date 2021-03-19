@@ -20,7 +20,7 @@ namespace AGPanel
     
     // Need to move all this to attach to a module in CommandModule parts so can save settings per vessel.
 
-    public class AGPanel : MonoBehaviour
+    public class AGPanel : PartModule
     {
         ToolbarControl toolbarControl;
         public static bool visible = true;
@@ -71,12 +71,14 @@ namespace AGPanel
             { 16, "Gear" },
         };
 
-        void Awake()
-        {
-            //Should be here or Start? does it matter?
-            //AddToolbarButton();
-        }
+        //private void Awake()
+        //{
+        //    //Should be here or Start? does it matter?
+        //    //AddToolbarButton();
+        //}
 
+
+        // Why VS2019 says this is unused but the AddToolButton(); is called so it must be used???
         void Start()
         {
             AddToolbarButton();
