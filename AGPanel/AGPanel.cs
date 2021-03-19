@@ -20,7 +20,7 @@ namespace AGPanel
     
     // Need to move all this to attach to a module in CommandModule parts so can save settings per vessel.
 
-    public class AGPanel : PartModule
+    public class AGPanel : MonoBehaviour
     {
         ToolbarControl toolbarControl;
         public static bool visible = true;
@@ -28,41 +28,18 @@ namespace AGPanel
         internal const string MODID = "AGPanel";
         internal const string MODNAME = "AGPanel";
 
-        
-        //Dictionary of KSP Action Groups
-        public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
-            { 0,  KSPActionGroup.None },
-            { 1,  KSPActionGroup.Custom01 },
-            { 2,  KSPActionGroup.Custom02 },
-            { 3,  KSPActionGroup.Custom03 },
-            { 4,  KSPActionGroup.Custom04 },
-            { 5,  KSPActionGroup.Custom05 },
-            { 6,  KSPActionGroup.Custom06 },
-            { 7,  KSPActionGroup.Custom07 },
-            { 8,  KSPActionGroup.Custom08 },
-            { 9,  KSPActionGroup.Custom09 },
-            { 10, KSPActionGroup.Custom10 },
-            { 11, KSPActionGroup.Light },
-            { 12, KSPActionGroup.RCS },
-            { 13, KSPActionGroup.SAS },
-            { 14, KSPActionGroup.Brakes },
-            { 15, KSPActionGroup.Abort },
-            { 16, KSPActionGroup.Gear }
-        };
-
         //Dictionary of current Action Group labels. Need to load this save if exist, else defaults.
-        public static Dictionary<int, String> dictAGLabels = new Dictionary<int, String> {
-            { 0,  "Stage" },
-            { 1,  "Custom01" },
-            { 2,  "Custom02" },
-            { 3,  "Custom03" },
-            { 4,  "Custom04" },
-            { 5,  "Custom05" },
-            { 6,  "Custom06" },
-            { 7,  "Custom07" },
-            { 8,  "Custom08" },
-            { 9,  "Custom09" },
-            { 10, "Custom10" },
+        public static Dictionary<int, String> agLabelMap = new Dictionary<int, String> {
+            { 1,  "custom01" },
+            { 2,  "custom02" },
+            { 3,  "custom03" },
+            { 4,  "custom04" },
+            { 5,  "custom05" },
+            { 6,  "custom06" },
+            { 7,  "custom07" },
+            { 8,  "custom08" },
+            { 9,  "custom09" },
+            { 10, "custom10" },
             { 11, "Light" },
             { 12, "RCS" },
             { 13, "SAS" },
@@ -82,6 +59,7 @@ namespace AGPanel
         void Start()
         {
             AddToolbarButton();
+            Debug.Log("AGPanel.AGPanel: OnStart");
         }
 
         void AddToolbarButton()
@@ -98,13 +76,14 @@ namespace AGPanel
                     MODNAME
                     );
             }
+            Debug.Log("AGPanel.AGPanel: AddToolbarButton");
         }
 
         void WindowToggle()
         {
             visible = !visible;
+            Debug.Log("AGPanel.AGPanel: WindowToggle");
         }
-
         
     }
 

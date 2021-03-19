@@ -67,9 +67,15 @@
       <HintPath>..\..\..\..\..\..\KSP\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VesselModuleSave">
+      <HintPath>..\..\..\..\..\..\KSP for ModDev\GameData\SpaceTuxLibrary\Plugins\VesselModuleSave.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AGPanel.cs" />
+    <Compile Include="AGPVessel.cs" />
+    <Compile Include="AGPanelModule.cs" />
     <Compile Include="EditorPanel.cs" />
     <Compile Include="FlightPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

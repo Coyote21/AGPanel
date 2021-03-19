@@ -25,7 +25,6 @@ namespace AGPanel
 
         private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
         
-        
         // Change these to a single dictionary dictOptions with simple int (bit value) entries?
         
         private static Dictionary<int, bool> dictToggles = new Dictionary<int, bool> {
@@ -121,12 +120,12 @@ namespace AGPanel
             GUILayout.Label("S");               // Remove button from flight after 1st press, to be used for single use AG's
             GUILayout.Label("V");               // Make button active/visible in flight panel
             GUILayout.EndHorizontal();
-            
-            for (int i = 1; i < 5; i++)
+
+            for (int i = 1; i < AGPanel.agLabelMap.Count; i++)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(String.Format("AG" + i + ": "));
-                AGPanel.dictAGLabels[i] = GUILayout.TextField(AGPanel.dictAGLabels[i], 25);
+                AGPanel.agLabelMap[i] = GUILayout.TextField(AGPanel.agLabelMap[i], 25);
                 if(GUILayout.Toggle(dictToggles[i], ""))
                 {
                     dictToggles[i] = !dictToggles[i];
@@ -150,7 +149,7 @@ namespace AGPanel
 
         private static void UpdateActionGroupLabel(int agID, String label)
         {
-            AGPanel.dictAGLabels[agID] = label;
+            AGPanel.agLabelMap[agID] = label;
         }
     }
 }
