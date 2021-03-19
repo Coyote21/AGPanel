@@ -15,10 +15,10 @@ using ClickThroughFix;
 namespace AGPanel
 {
     [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
-    // Want to learn why this line, instead of KSPAddon, it borks the KSP GUI so that I can't save games or Quit from the Pause Menu (Specifically in Flight Scene)
+    // Want to learn why using this line, instead of KSPAddon, borks the KSP GUI so that I can't save games or Quit from the Pause Menu (Specifically in Flight Scene)
     //[KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.FLIGHT, GameScenes.EDITOR)]  
     
-    // Need to move this to attach to a module in CommandModule parts so can save changes per vessel.
+    // Need to move all this to attach to a module in CommandModule parts so can save settings per vessel.
 
     public class AGPanel : MonoBehaviour
     {

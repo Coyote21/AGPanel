@@ -108,6 +108,8 @@ namespace AGPanel
 
         void DrawEditorWindow(int id)
         {
+            //Needs a lot of work formatting the layout correctly and making pretty-er 
+
 
             GUI.enabled = true;
             //GUILayout.Button("HERE");

@@ -44,10 +44,15 @@ namespace AGPanel
 
         void DrawFlightWindow(int id)
         {
+            //Needs to be smaller, prettyer etc and maybe add a large red button somewhere for abort AG?
+            
+
             GUI.enabled = (FlightGlobals.ActiveVessel != null);
+            
+            //First attempt at kind of a toggle state for buttons. Dont know how to activate?
             var style = new GUIStyle(GUI.skin.button);
             style.active.textColor = Color.green;
-            //style.active.background = Color.black;
+            //needs to be style.active.background = Sunken Image;
 
             GUILayout.BeginVertical();
             //Load which buttons-action groups are set to be shown then loop through them
