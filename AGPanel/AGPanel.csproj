@@ -76,6 +76,8 @@
     <Compile Include="AGPanel.cs" />
     <Compile Include="AGPVessel.cs" />
     <Compile Include="AGPanelModule.cs" />
+    <Compile Include="AGPScenario.cs" />
+    <Compile Include="AGPModule.cs" />
     <Compile Include="EditorPanel.cs" />
     <Compile Include="FlightPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

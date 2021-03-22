@@ -17,76 +17,94 @@ namespace AGPanel
         const float WIDTH = 300;
         const float HEIGHT = 300;
         //Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
-        
+
         //Make window dynamic? not really needed here?
         Rect editorWindowPos = new Rect();
 
         //Vessel activeVessel;
 
-        private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
-        
+        //[KSPField(isPersistant = true)] public String labelMapString = dictNewAGLabels.ToString(); 
+
+        //private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
+
         // Change these to a single dictionary dictOptions with simple int (bit value) entries?
-        
-        private static Dictionary<int, bool> dictToggles = new Dictionary<int, bool> {
-            { 0,  false },
-            { 1,  false },
-            { 2,  false },
-            { 3,  false },
-            { 4,  false },
-            { 5,  false },
-            { 6,  false },
-            { 7,  false },
-            { 8,  false },
-            { 9,  false },
-            { 10, false },
-            { 11, false },
-            { 12, false },
-            { 13, false },
-            { 14, false },
-            { 15, false },
-            { 16, false },
+
+        public static List<String> labelList = new List<string> { 
+            "Custom01",
+            "Custom02",
+            "Custom03",
+            "Custom04",
+            "Custom05",
+            "Custom06",
+            "Custom07",
+            "Custom08",
+            "Custom09",
+            "Custom10",
+            "Light",
+            "RCS",
+            "SAS",
+            "Brakes",
+            "Abort",
+            "Gear"
         };
 
-        private static Dictionary<int, bool> dictSinglePress = new Dictionary<int, bool> {
-            { 0,  false },
-            { 1,  false },
-            { 2,  false },
-            { 3,  false },
-            { 4,  false },
-            { 5,  false },
-            { 6,  false },
-            { 7,  false },
-            { 8,  false },
-            { 9,  false },
-            { 10, false },
-            { 11, false },
-            { 12, false },
-            { 13, false },
-            { 14, false },
-            { 15, false },
-            { 16, false },
+        public static List<Boolean> toggleList = new List<Boolean> {
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        };
+        public static List<Boolean> visibleList = new List<Boolean> {
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        };
+        public static List<Boolean> oneDoneList = new List<Boolean> {
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
         };
 
-        private static Dictionary<int, bool> dictVisible = new Dictionary<int, bool> {
-            { 0,  false },
-            { 1,  false },
-            { 2,  false },
-            { 3,  false },
-            { 4,  false },
-            { 5,  false },
-            { 6,  false },
-            { 7,  false },
-            { 8,  false },
-            { 9,  false },
-            { 10, false },
-            { 11, false },
-            { 12, false },
-            { 13, false },
-            { 14, false },
-            { 15, false },
-            { 16, false },
-        };
+        public static int toggleInt = 0;
+        public static int visibleInt = 0;
+        public static int oneDoneInt = 0;
 
+    
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
         void Start()
@@ -125,18 +143,18 @@ namespace AGPanel
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(String.Format("AG" + i + ": "));
-                AGPanel.agLabelMap[i] = GUILayout.TextField(AGPanel.agLabelMap[i], 25);
-                if(GUILayout.Toggle(dictToggles[i], ""))
+                labelList[i] = GUILayout.TextField(labelList[i], 25);
+                if(GUILayout.Toggle(toggleList[i], ""))
                 {
-                    dictToggles[i] = !dictToggles[i];
+                    toggleList[i] = !toggleList[i];
                 }
-                if (GUILayout.Toggle(dictSinglePress[i], ""))
+                if (GUILayout.Toggle(oneDoneList[i], ""))
                 {
-                    dictSinglePress[i] = !dictSinglePress[i];
+                    oneDoneList[i] = !oneDoneList[i];
                 }
-                if (GUILayout.Toggle(dictVisible[i], ""))
+                if (GUILayout.Toggle(visibleList[i], ""))
                 {
-                    dictVisible[i] = !dictVisible[i];
+                    visibleList[i] = !visibleList[i];
                 }
                 GUILayout.EndHorizontal();
             }
@@ -147,9 +165,33 @@ namespace AGPanel
             GUI.DragWindow();
         }
 
-        private static void UpdateActionGroupLabel(int agID, String label)
+        public void OnSave()
         {
-            AGPanel.agLabelMap[agID] = label;
+            if (EditorLogic.RootPart.Modules.Contains("AGPModule"))
+            {
+                foreach (PartModule module in EditorLogic.RootPart.Modules)
+                {
+                    if (module.moduleName == "AGPModule")
+                    {
+                        //Add Data
+                        module.Fields.SetValue("labelMap", labelList.ToString());
+                    }
+                }
+            }
         }
+        
+        
+        //void OnSave()
+        //{
+        //    
+        //    Debug.Log("AGPanel.EditorPanel: OnSave: Maybe Saved: " + labelMapString);
+        //
+        //}
+
+
+        //private static void UpdateActionGroupLabel(int agID, String label)
+        //{
+        //    AGPanel.agLabelMap[agID] = label;
+        //}
     }
 }
