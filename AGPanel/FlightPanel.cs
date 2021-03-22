@@ -13,40 +13,107 @@ namespace AGPanel
     public class FlightPanel : MonoBehaviour
     {
         int flightWindowID;
-        public static bool loadedData = false;
 
-        //Dictionary of KSP Action Groups
-        public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
-            { 0,  KSPActionGroup.None },
-            { 1,  KSPActionGroup.Custom01 },
-            { 2,  KSPActionGroup.Custom02 },
-            { 3,  KSPActionGroup.Custom03 },
-            { 4,  KSPActionGroup.Custom04 },
-            { 5,  KSPActionGroup.Custom05 },
-            { 6,  KSPActionGroup.Custom06 },
-            { 7,  KSPActionGroup.Custom07 },
-            { 8,  KSPActionGroup.Custom08 },
-            { 9,  KSPActionGroup.Custom09 },
-            { 10, KSPActionGroup.Custom10 },
-            { 11, KSPActionGroup.Light },
-            { 12, KSPActionGroup.RCS },
-            { 13, KSPActionGroup.SAS },
-            { 14, KSPActionGroup.Brakes },
-            { 15, KSPActionGroup.Abort },
-            { 16, KSPActionGroup.Gear }
-        };
-
-        //const float WIDTH = 100;
-        //const float HEIGHT = 200;
-        //Rect flightWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
-
-        //For dynamic sized winodow
         Rect flightWindowPos = new Rect();
 
         Vessel activeVessel;
 
-
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
+
+        //Dictionary of KSP Action Groups
+        public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
+            { 0,  KSPActionGroup.Custom01 },
+            { 1,  KSPActionGroup.Custom02 },
+            { 2,  KSPActionGroup.Custom03 },
+            { 3,  KSPActionGroup.Custom04 },
+            { 4,  KSPActionGroup.Custom05 },
+            { 5,  KSPActionGroup.Custom06 },
+            { 6,  KSPActionGroup.Custom07 },
+            { 7,  KSPActionGroup.Custom08 },
+            { 8,  KSPActionGroup.Custom09 },
+            { 9, KSPActionGroup.Custom10 },
+            { 10, KSPActionGroup.Light },
+            { 11, KSPActionGroup.RCS },
+            { 12, KSPActionGroup.SAS },
+            { 13, KSPActionGroup.Brakes },
+            { 14, KSPActionGroup.Abort },
+            { 15, KSPActionGroup.Gear }
+        };
+
+        public static List<String> labelList = new List<string> {
+            "Custom01",
+            "Custom02",
+            "Custom03",
+            "Custom04",
+            "Custom05",
+            "Custom06",
+            "Custom07",
+            "Custom08",
+            "Custom09",
+            "Custom10",
+            "Light",
+            "RCS",
+            "SAS",
+            "Brakes",
+            "Abort",
+            "Gear"
+        };
+
+        public static List<Boolean> visibleList = new List<Boolean> {
+             false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+        };
+        public static List<Boolean> toggleList = new List<Boolean> {
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+        };     
+        public static List<Boolean> oneDoneList = new List<Boolean> {
+             false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+        };
+
 
         void Start()
         {
@@ -54,8 +121,43 @@ namespace AGPanel
 
             flightWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
-            Debug.Log("AGPanel.FlightPanel: OnStart");
+            //Load data from root part
+            LoadAGPData();
         }
+
+        public void LoadAGPData()
+        {
+            AGPModule storageModule = activeVessel.rootPart.Modules.GetModule<AGPModule>();
+            labelList = storageModule.labelMap.Split('~').ToList();
+            visibleList = DeserializeBoolList(storageModule.visibleList);
+            
+            
+            //for (int i=0; i < storageModule.visibleList.Length; i++)
+            //{
+            //    visibleList[i] = ((int) storageModule.visibleList[i] > 0);
+            //}
+        }
+
+        private List<Boolean> DeserializeBoolList(String s)
+        {
+            List<Boolean> list = new List<Boolean>();
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                //if (s[i].Equals("1"))
+                //    list.Add(true);
+                //else
+                //    list.Add(false);
+
+                list.Add(s[i].Equals("1"));
+                
+                
+                Debug.Log("AGPanel.FlightPanel : Deserialize : " + (s[i].Equals("1")));
+            }
+            
+            return list;
+        }
+
 
         void OnGUI()
         {
@@ -64,14 +166,12 @@ namespace AGPanel
                 flightWindowPos = ClickThruBlocker.GUILayoutWindow(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
             //flightWindowPos = GUILayout.Window(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
 
-            //Debug.Log("AGPanel.FlightPanel: OnGUI");
         }
 
         void DrawFlightWindow(int id)
         {
             //Needs to be smaller, prettyer etc and maybe add a large red button somewhere for abort AG?
-            
-
+           
             GUI.enabled = (FlightGlobals.ActiveVessel != null);
             
             //First attempt at kind of a toggle state for buttons. Dont know how to activate?
@@ -80,25 +180,25 @@ namespace AGPanel
             //needs to be style.active.background = Sunken Image;
 
             GUILayout.BeginVertical();
-            //Load which buttons-action groups are set to be shown then loop through them
-            for (int i = 1; i < 5; i++)
+            //Loop through the buttons-action groups that are set to be shown
+            for (int i = 0; i < labelList.Count; i++)
             {
-                if (GUILayout.Button(AGPanel.agLabelMap[i]))
+                if (visibleList[i])
                 {
-                    ActivateActionGroup(i);
+                    if (GUILayout.Button(labelList[i]))
+                    {
+                        ActivateActionGroup(i);
+                    }
                 }
             }
             GUILayout.EndVertical();
             GUI.DragWindow();
 
-            //Debug.Log("AGPanel.FlightPanel: DrawFlightWindow");
         }
 
-        private static void ActivateActionGroup(int agID)
+        private static void ActivateActionGroup(int ag)
         {
-            //Actiavte Action Group agID
-            FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[agID]);
-            Debug.Log("AGPanel.FlightPanel: ActivateActionGroup");
+            FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[ag]);
         }
     }
 }

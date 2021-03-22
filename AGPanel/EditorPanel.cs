@@ -16,20 +16,9 @@ namespace AGPanel
 
         const float WIDTH = 300;
         const float HEIGHT = 300;
-        //Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
 
-        //Make window dynamic? not really needed here?
-        Rect editorWindowPos = new Rect();
-
-        //Vessel activeVessel;
-
-        //[KSPField(isPersistant = true)] public String labelMapString = dictNewAGLabels.ToString(); 
-
-        //private static Dictionary<int, String> dictNewAGLabels = new Dictionary<int, String>();
-
-        // Change these to a single dictionary dictOptions with simple int (bit value) entries?
-
-        public static List<String> labelList = new List<string> { 
+        public static List<String> labelList = new List<string> {
             "Custom01",
             "Custom02",
             "Custom03",
@@ -64,8 +53,10 @@ namespace AGPanel
             false,
             false,
             false,
+            false
         };
         public static List<Boolean> visibleList = new List<Boolean> {
+             false,
             false,
             false,
             false,
@@ -80,9 +71,10 @@ namespace AGPanel
             false,
             false,
             false,
-            false,
+            false
         };
         public static List<Boolean> oneDoneList = new List<Boolean> {
+             false,
             false,
             false,
             false,
@@ -97,29 +89,28 @@ namespace AGPanel
             false,
             false,
             false,
-            false,
+            false
         };
 
         public static int toggleInt = 0;
         public static int visibleInt = 0;
         public static int oneDoneInt = 0;
 
-    
+
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
         void Start()
         {
-            //activeVessel = FlightGlobals.ActiveVessel;
-
             editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
+            GameEvents.onAboutToSaveShip.Add(StoreAGPData);
         }
 
         void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
             if (AGPanel.visible)
-                editorWindowPos = ClickThruBlocker.GUILayoutWindow(editorWindowID, editorWindowPos, DrawEditorWindow, "AG Editor Panel");
-                //editorWindowPos = GUILayout.Window(editorWindowID, editorWindowPos, DrawEditorWindow, "AG Editor Panel");
+                editorWindowPos = ClickThruBlocker.GUILayoutWindow(editorWindowID, editorWindowPos, DrawEditorWindow, "Action Group Label Editor");
+            //editorWindowPos = GUILayout.Window(editorWindowID, editorWindowPos, DrawEditorWindow, "AG Editor Panel");
 
         }
 
@@ -127,11 +118,10 @@ namespace AGPanel
         {
             //Needs a lot of work formatting the layout correctly and making pretty-er 
 
-
             GUI.enabled = true;
-            //GUILayout.Button("HERE");
+
             GUILayout.BeginVertical();
-    
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Action Group");
             GUILayout.Label("T");               // Make button in flight panel a toggle (not implemented but planing ahead)
@@ -139,10 +129,10 @@ namespace AGPanel
             GUILayout.Label("V");               // Make button active/visible in flight panel
             GUILayout.EndHorizontal();
 
-            for (int i = 1; i < AGPanel.agLabelMap.Count; i++)
+            for (int i = 0; i < labelList.Count; i++)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(String.Format("AG" + i + ": "));
+                GUILayout.Label(String.Format("AG" + (i + 1) + ": "));
                 labelList[i] = GUILayout.TextField(labelList[i], 25);
                 if(GUILayout.Toggle(toggleList[i], ""))
                 {
@@ -158,40 +148,44 @@ namespace AGPanel
                 }
                 GUILayout.EndHorizontal();
             }
-            
+
             GUILayout.EndVertical();
-            //GUILayout.Button("GONE");
 
             GUI.DragWindow();
+
         }
 
-        public void OnSave()
+        public void StoreAGPData(ShipConstruct s)
         {
+            AGPModule storageModule;
+
             if (EditorLogic.RootPart.Modules.Contains("AGPModule"))
             {
-                foreach (PartModule module in EditorLogic.RootPart.Modules)
+                storageModule = EditorLogic.RootPart.Modules.GetModule<AGPModule>();
+
+                String serializedLabelList = "";
+
+                foreach (String label in labelList)
                 {
-                    if (module.moduleName == "AGPModule")
-                    {
-                        //Add Data
-                        module.Fields.SetValue("labelMap", labelList.ToString());
-                    }
+                    serializedLabelList += label + "~";
                 }
+                storageModule.labelMap = serializedLabelList.TrimEnd('~');
+                
+                storageModule.visibleList = ConvertBoolList2String(visibleList);
+
+
             }
+
         }
-        
-        
-        //void OnSave()
-        //{
-        //    
-        //    Debug.Log("AGPanel.EditorPanel: OnSave: Maybe Saved: " + labelMapString);
-        //
-        //}
 
-
-        //private static void UpdateActionGroupLabel(int agID, String label)
-        //{
-        //    AGPanel.agLabelMap[agID] = label;
-        //}
+        private String ConvertBoolList2String(List<Boolean> list)
+        {
+            String s = "";
+            foreach (Boolean b in list)
+            {
+                s += (b ? "1" : "0");
+            }
+            return s;
+        }
     }
 }

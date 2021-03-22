@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGPanel", "AGPanel\AGPanel.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{305A5181-5018-472B-A79E-E39BA02A9065}"
 	ProjectSection(SolutionItems) = preProject
-		AGPanel.cfg = AGPanel.cfg
+		AGPModule.cfg = AGPModule.cfg
 	EndProjectSection
 EndProject
 Global
