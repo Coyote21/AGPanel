@@ -22,98 +22,66 @@ namespace AGPanel
 
         //Dictionary of KSP Action Groups
         public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
-            { 0,  KSPActionGroup.Custom01 },
-            { 1,  KSPActionGroup.Custom02 },
-            { 2,  KSPActionGroup.Custom03 },
-            { 3,  KSPActionGroup.Custom04 },
-            { 4,  KSPActionGroup.Custom05 },
-            { 5,  KSPActionGroup.Custom06 },
-            { 6,  KSPActionGroup.Custom07 },
-            { 7,  KSPActionGroup.Custom08 },
-            { 8,  KSPActionGroup.Custom09 },
-            { 9, KSPActionGroup.Custom10 },
-            { 10, KSPActionGroup.Light },
-            { 11, KSPActionGroup.RCS },
-            { 12, KSPActionGroup.SAS },
-            { 13, KSPActionGroup.Brakes },
-            { 14, KSPActionGroup.Abort },
-            { 15, KSPActionGroup.Gear }
+            { 1,  KSPActionGroup.Custom01 },
+            { 2,  KSPActionGroup.Custom02 },
+            { 3,  KSPActionGroup.Custom03 },
+            { 4,  KSPActionGroup.Custom04 },
+            { 5,  KSPActionGroup.Custom05 },
+            { 6,  KSPActionGroup.Custom06 },
+            { 7,  KSPActionGroup.Custom07 },
+            { 8,  KSPActionGroup.Custom08 },
+            { 9,  KSPActionGroup.Custom09 },
+            { 10, KSPActionGroup.Custom10 },
+            { 11, KSPActionGroup.Light },
+            { 12, KSPActionGroup.RCS },
+            { 13, KSPActionGroup.SAS },
+            { 14, KSPActionGroup.Brakes },
+            { 15, KSPActionGroup.Abort },
+            { 16, KSPActionGroup.Gear }
         };
 
-        public static List<String> labelList = new List<string> {
-            "Custom01",
-            "Custom02",
-            "Custom03",
-            "Custom04",
-            "Custom05",
-            "Custom06",
-            "Custom07",
-            "Custom08",
-            "Custom09",
-            "Custom10",
-            "Light",
-            "RCS",
-            "SAS",
-            "Brakes",
-            "Abort",
-            "Gear"
-        };
+        public class LabelRec
+        {
+            public int ActionGroup;
+            public String Label;
+            public Boolean Visible = false;
+            public BtnTypes ButtonType = BtnTypes.Plain;
 
-        public static List<Boolean> visibleList = new List<Boolean> {
-             false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-        };
-        public static List<Boolean> toggleList = new List<Boolean> {
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-        };     
-        public static List<Boolean> oneDoneList = new List<Boolean> {
-             false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-        };
+            public enum BtnTypes
+            {
+                Plain,
+                Toggle,
+                OneAndDone
+            };
 
+            public LabelRec(int actionGroup, string label)
+            {
+                this.ActionGroup = actionGroup;
+                this.Label = label;
+                this.Visible = false;
+                this.ButtonType = BtnTypes.Plain;
+            }
+
+        }
+
+        public static List<LabelRec> labelList = new List<LabelRec> {
+            new LabelRec(1, "Custom01"),
+            new LabelRec(2, "Custom02"),
+            new LabelRec(3, "Custom03"),
+            new LabelRec(4, "Custom04"),
+            new LabelRec(5, "Custom05"),
+            new LabelRec(6, "Custom06"),
+            new LabelRec(7, "Custom07"),
+            new LabelRec(8, "Custom08"),
+            new LabelRec(9, "Custom09"),
+            new LabelRec(10, "Custom10"),
+            new LabelRec(11, "Light"),
+            new LabelRec(12, "RCS"),
+            new LabelRec(13, "SAS"),
+            new LabelRec(14, "Brakes"),
+            new LabelRec(15, "Abort"),
+            new LabelRec(16, "Gear"),
+        };
 
         void Start()
         {
@@ -128,37 +96,18 @@ namespace AGPanel
         public void LoadAGPData()
         {
             AGPModule storageModule = activeVessel.rootPart.Modules.GetModule<AGPModule>();
-            labelList = storageModule.labelMap.Split('~').ToList();
-            visibleList = DeserializeBoolList(storageModule.visibleList);
-            
-            
-            //for (int i=0; i < storageModule.visibleList.Length; i++)
-            //{
-            //    visibleList[i] = ((int) storageModule.visibleList[i] > 0);
-            //}
-        }
 
-        private List<Boolean> DeserializeBoolList(String s)
-        {
-            List<Boolean> list = new List<Boolean>();
-
-            for (int i = 0; i < s.Length; i++)
+            for (int i = 0; i < labelList.Count; i++)
             {
-                //if (s[i].Equals("1"))
-                //    list.Add(true);
-                //else
-                //    list.Add(false);
+                String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
 
-                list.Add(s[i].Equals("1"));
-                
-                
-                Debug.Log("AGPanel.FlightPanel : Deserialize : " + (s[i].Equals("1")));
+                labelList[i].Visible = value.Substring(0, 1).Equals("1");
+                labelList[i].ButtonType = (LabelRec.BtnTypes)Enum.Parse(typeof(LabelRec.BtnTypes), value.Substring(1, 1));
+                labelList[i].Label = value.Substring(2);
             }
-            
-            return list;
         }
 
-
+       
         void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
@@ -180,17 +129,19 @@ namespace AGPanel
             //needs to be style.active.background = Sunken Image;
 
             GUILayout.BeginVertical();
+
             //Loop through the buttons-action groups that are set to be shown
-            for (int i = 0; i < labelList.Count; i++)
+            foreach (LabelRec rec in labelList)
             {
-                if (visibleList[i])
+                if (rec.Visible)
                 {
-                    if (GUILayout.Button(labelList[i]))
+                    if (GUILayout.Button(rec.Label))
                     {
-                        ActivateActionGroup(i);
+                        ActivateActionGroup(rec.ActionGroup);
                     }
                 }
             }
+
             GUILayout.EndVertical();
             GUI.DragWindow();
 
