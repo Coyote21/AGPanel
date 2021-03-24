@@ -14,7 +14,7 @@ namespace AGPanel
     {
         int editorWindowID;
 
-        const float WIDTH = 300;
+        const float WIDTH = 350;
         const float HEIGHT = 300;
         Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
 
@@ -41,27 +41,29 @@ namespace AGPanel
         {
             public int ActionGroup;
             public String Label;
+            public Boolean Active;
             public Boolean Visible = false;
-            public BtnTypes ButtonType = BtnTypes.Plain;
+            public int ButtonType = 0;
 
             public enum BtnTypes
             {
                 Plain,
                 Toggle,
-                OneAndDone
+                SingleUse
             };
 
             public LabelRec(int actionGroup, string label)
             {
                 this.ActionGroup = actionGroup;
                 this.Label = label;
+                this.Active = false;
                 this.Visible = false;
-                this.ButtonType = BtnTypes.Plain;
+                this.ButtonType = 0;
             }
 
             public String Serialise()
             {
-                return (this.Visible ? "1" : "0") + this.ButtonType.ToString("d") + this.Label;
+                return (this.Visible ? "1" : "0") + this.ButtonType.ToString() + this.Label;
             }
         }
 
@@ -112,17 +114,28 @@ namespace AGPanel
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Action Group");
-            GUILayout.Label("V");               // Make button active/visible in flight panel
-            //GUILayout.Label("T");               // Make button in flight panel a toggle (not implemented but planing ahead)
+            GUILayout.Label("Vis");               // Make button active/visible in flight panel
+            GUILayout.Label("Type");               // Make button in flight panel a toggle (not implemented but planing ahead)
             //GUILayout.Label("S");               // Remove button from flight after 1st press, to be used for single use AG's
             GUILayout.EndHorizontal();
 
+            GUIStyle ToggleButton = new GUIStyle()
+            {
+                margin = new RectOffset(HighLogic.Skin.button.margin.left, HighLogic.Skin.button.margin.right, 5, 5),
+                fixedHeight = 25f,
+            };
+            
             foreach (LabelRec rec in labelList)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(String.Format("AG" + rec.ActionGroup + ": "));
                 rec.Label = GUILayout.TextField(rec.Label, 25);
                 rec.Visible = GUILayout.Toggle(rec.Visible, "");
+                
+                //Checkout Trajectories for adding label to end of slider indicating value
+                rec.ButtonType = Convert.ToInt32(GUILayout.HorizontalSlider((float)rec.ButtonType, 0.0f, 2.0f));
+                //Possible alternative if can make btns small enough
+                //rec.ButtonType = GUILayout.Toolbar(rec.ButtonType, Enum.GetNames(typeof(LabelRec.BtnTypes)));
                 GUILayout.EndHorizontal();
             }
 
@@ -162,7 +175,7 @@ namespace AGPanel
                 String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
 
                 labelList[i].Visible = value.Substring(0, 1).Equals("1");
-                labelList[i].ButtonType = (LabelRec.BtnTypes)Enum.Parse(typeof(LabelRec.BtnTypes), value.Substring(1, 1));
+                labelList[i].ButtonType = (int.Parse(value.Substring(1, 1)));
                 labelList[i].Label = value.Substring(2);
                 Debug.Log("AGPanel: EditorPanel: LoadAGPData: value = " + value);
                 Debug.Log("AGPanel: EditorPanel: LoadAGPData: labeList[" + i + "].Label = " + value.Substring(2));

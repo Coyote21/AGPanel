@@ -44,8 +44,9 @@ namespace AGPanel
         {
             public int ActionGroup;
             public String Label;
+            public Boolean Active = false;
             public Boolean Visible = false;
-            public BtnTypes ButtonType = BtnTypes.Plain;
+            public int ButtonType = 0;
 
             public enum BtnTypes
             {
@@ -58,8 +59,9 @@ namespace AGPanel
             {
                 this.ActionGroup = actionGroup;
                 this.Label = label;
+                this.Active = false;
                 this.Visible = false;
-                this.ButtonType = BtnTypes.Plain;
+                this.ButtonType = 0;
             }
 
         }
@@ -102,7 +104,7 @@ namespace AGPanel
                 String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
 
                 labelList[i].Visible = value.Substring(0, 1).Equals("1");
-                labelList[i].ButtonType = (LabelRec.BtnTypes)Enum.Parse(typeof(LabelRec.BtnTypes), value.Substring(1, 1));
+                labelList[i].ButtonType = (int.Parse(value.Substring(1, 1)));
                 labelList[i].Label = value.Substring(2);
             }
         }
@@ -135,9 +137,25 @@ namespace AGPanel
             {
                 if (rec.Visible)
                 {
-                    if (GUILayout.Button(rec.Label))
+                    if (rec.ButtonType == 1)
                     {
-                        ActivateActionGroup(rec.ActionGroup);
+                        if(GUILayout.Toggle(rec.Active, rec.Label, HighLogic.Skin.button) != rec.Active)
+                        {
+                            rec.Active = !rec.Active;
+                            ActivateActionGroup(rec.ActionGroup);
+                        }
+                    }
+                    else
+                    {
+                        if (GUILayout.Button(rec.Label))
+                        {
+                            ActivateActionGroup(rec.ActionGroup);
+                            if (rec.ButtonType == 2)
+                            {
+                                rec.Visible = false;
+                                OnGUI();
+                            }
+                        }
                     }
                 }
             }
