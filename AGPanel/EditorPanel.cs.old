@@ -16,7 +16,10 @@ namespace AGPanel
 
         const float WIDTH = 350;
         const float HEIGHT = 300;
-        Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        public static Rect editorWindowPos = new Rect(Screen.width / 2 - WIDTH / 2 + 100, Screen.height / 2 - HEIGHT / 2 - 100, WIDTH, HEIGHT);
+
+        float editorPanelX = 0f;
+        float editorPanelY = 0f;
 
         //public static List<String> labelList = new List<string> {
         //    "Custom01",
@@ -37,53 +40,53 @@ namespace AGPanel
         //    "Gear"
         //};
 
-        public class LabelRec
-        {
-            public int ActionGroup;
-            public String Label;
-            public Boolean Active;
-            public Boolean Visible = false;
-            public int ButtonType = 0;
+        //public class LabelRec
+        //{
+        //    public int ActionGroup;
+        //    public String Label;
+        //    public Boolean Active;
+        //    public Boolean Visible = false;
+        //    public int ButtonType = 0;
+        //
+        //    public enum BtnTypes
+        //    {
+        //        Plain,
+        //        Toggle,
+        //        SingleUse
+        //    };
+        //
+        //    public LabelRec(int actionGroup, string label)
+        //    {
+        //        this.ActionGroup = actionGroup;
+        //        this.Label = label;
+        //        this.Active = false;
+        //        this.Visible = false;
+        //        this.ButtonType = 0;
+        //    }
+        //
+        //    public String Serialise()
+        //    {
+        //        return (this.Visible ? "1" : "0") + this.ButtonType.ToString() + this.Label;
+        //    }
+        //}
 
-            public enum BtnTypes
-            {
-                Plain,
-                Toggle,
-                SingleUse
-            };
-
-            public LabelRec(int actionGroup, string label)
-            {
-                this.ActionGroup = actionGroup;
-                this.Label = label;
-                this.Active = false;
-                this.Visible = false;
-                this.ButtonType = 0;
-            }
-
-            public String Serialise()
-            {
-                return (this.Visible ? "1" : "0") + this.ButtonType.ToString() + this.Label;
-            }
-        }
-
-        public static List<LabelRec> labelList = new List<LabelRec> {
-            new LabelRec(1, "Custom01"),
-            new LabelRec(2, "Custom02"),
-            new LabelRec(3, "Custom03"),
-            new LabelRec(4, "Custom04"),
-            new LabelRec(5, "Custom05"),
-            new LabelRec(6, "Custom06"),
-            new LabelRec(7, "Custom07"),
-            new LabelRec(8, "Custom08"),
-            new LabelRec(9, "Custom09"),
-            new LabelRec(10, "Custom10"),
-            new LabelRec(11, "Light"),
-            new LabelRec(12, "RCS"),
-            new LabelRec(13, "SAS"),
-            new LabelRec(14, "Brakes"),
-            new LabelRec(15, "Abort"),
-            new LabelRec(16, "Gear"),
+        public static List<AGPanel.LabelRec> editorLabelList = new List<AGPanel.LabelRec> {
+            new AGPanel.LabelRec(1, "Custom01"),
+            new AGPanel.LabelRec(2, "Custom02"),
+            new AGPanel.LabelRec(3, "Custom03"),
+            new AGPanel.LabelRec(4, "Custom04"),
+            new AGPanel.LabelRec(5, "Custom05"),
+            new AGPanel.LabelRec(6, "Custom06"),
+            new AGPanel.LabelRec(7, "Custom07"),
+            new AGPanel.LabelRec(8, "Custom08"),
+            new AGPanel.LabelRec(9, "Custom09"),
+            new AGPanel.LabelRec(10, "Custom10"),
+            new AGPanel.LabelRec(11, "Light"),
+            new AGPanel.LabelRec(12, "RCS"),
+            new AGPanel.LabelRec(13, "SAS"),
+            new AGPanel.LabelRec(14, "Brakes"),
+            new AGPanel.LabelRec(15, "Abort"),
+            new AGPanel.LabelRec(16, "Gear"),
         };
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
@@ -91,8 +94,17 @@ namespace AGPanel
         void Start()
         {
             editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
-            GameEvents.onAboutToSaveShip.Add(StoreAGPData);
-            GameEvents.onEditorLoad.Add(LoadAGPData);
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onAboutToSaveShip.Add(StoreAGPDataInPartModule);
+                GameEvents.onEditorLoad.Add(LoadAGPDataInEditor);
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                AGPanel.activeVessel = FlightGlobals.ActiveVessel;
+            }
+            AGPanel.LoadSettings();
         }
 
         void OnGUI()
@@ -101,7 +113,13 @@ namespace AGPanel
             if (AGPanel.visible)
                 editorWindowPos = ClickThruBlocker.GUILayoutWindow(editorWindowID, editorWindowPos, DrawEditorWindow, "Action Group Label Editor");
             //editorWindowPos = GUILayout.Window(editorWindowID, editorWindowPos, DrawEditorWindow, "AG Editor Panel");
-
+            if (editorWindowPos.x != editorPanelX || editorWindowPos.y != editorPanelY)
+            {
+                AGPanel.SaveSettings();
+                editorPanelX = editorWindowPos.x;
+                editorPanelY = editorWindowPos.y;
+            }
+                
         }
 
         void DrawEditorWindow(int id)
@@ -116,7 +134,6 @@ namespace AGPanel
             GUILayout.Label("Action Group");
             GUILayout.Label("Vis");               // Make button active/visible in flight panel
             GUILayout.Label("Type");               // Make button in flight panel a toggle (not implemented but planing ahead)
-            //GUILayout.Label("S");               // Remove button from flight after 1st press, to be used for single use AG's
             GUILayout.EndHorizontal();
 
             GUIStyle ToggleButton = new GUIStyle()
@@ -125,7 +142,7 @@ namespace AGPanel
                 fixedHeight = 25f,
             };
             
-            foreach (LabelRec rec in labelList)
+            foreach (AGPanel.LabelRec rec in AGPanel.labelList)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(String.Format("AG" + rec.ActionGroup + ": "));
@@ -145,7 +162,7 @@ namespace AGPanel
 
         }
 
-        public void StoreAGPData(ShipConstruct s)
+        public void StoreAGPDataInPartModule(ShipConstruct s)
         {
             AGPModule storageModule;
 
@@ -153,7 +170,7 @@ namespace AGPanel
             {
                 storageModule = EditorLogic.RootPart.Modules.GetModule<AGPModule>();
 
-                foreach (LabelRec rec in labelList)
+                foreach (AGPanel.LabelRec rec in AGPanel.labelList)
                 {
                     storageModule.Fields.SetValue("AG" + rec.ActionGroup, rec.Serialise());
                     //Debug.Log("AGPanel: EditorPanel: StoreAGPData: SetValue: AG" + rec.ActionGroup + " = " + rec.Serialise());
@@ -161,7 +178,7 @@ namespace AGPanel
             }
         }
 
-        public void LoadAGPData(ShipConstruct s, KSP.UI.Screens.CraftBrowserDialog.LoadType loadType)
+        public void LoadAGPDataInEditor(ShipConstruct s, KSP.UI.Screens.CraftBrowserDialog.LoadType loadType)
         {
             // This is not working, it is pulling default data from somewhere other than the .craft files, maybe its
             // holding on to the values from before the load?
@@ -170,15 +187,17 @@ namespace AGPanel
             
             AGPModule storageModule = EditorLogic.RootPart.Modules.GetModule<AGPModule>();
 
-            for (int i = 0; i < labelList.Count; i++)
+            for (int i = 0; i < AGPanel.labelList.Count; i++)
             {
                 String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
 
-                labelList[i].Visible = value.Substring(0, 1).Equals("1");
-                labelList[i].ButtonType = (int.Parse(value.Substring(1, 1)));
-                labelList[i].Label = value.Substring(2);
-                Debug.Log("AGPanel: EditorPanel: LoadAGPData: value = " + value);
-                Debug.Log("AGPanel: EditorPanel: LoadAGPData: labeList[" + i + "].Label = " + value.Substring(2));
+                AGPanel.labelList[i].Visible = value.Substring(0, 1).Equals("1");
+                //AGPanel.labelList[i].Active = value.Substring(1, 1).Equals("1");
+                AGPanel.labelList[i].Active = false;
+                AGPanel.labelList[i].ButtonType = (int.Parse(value.Substring(2, 1)));
+                AGPanel.labelList[i].Label = value.Substring(3);
+                //Debug.Log("AGPanel: EditorPanel: LoadAGPData: value = " + value);
+                //Debug.Log("AGPanel: EditorPanel: LoadAGPData: labeList[" + i + "].Label = " + value.Substring(3));
             }
         }
     }

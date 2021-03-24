@@ -74,12 +74,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AGPanel.cs" />
-    <None Include="AGPVessel.cs.old" />
-    <None Include="AGPanelModule.cs.old" />
-    <None Include="AGPScenario.cs.old" />
     <Compile Include="AGPModule.cs" />
-    <None Include="AGPPart.cs.old" />
-    <Compile Include="EditorPanel.cs" />
+    <None Include="EditorPanel.cs.old" />
     <Compile Include="FlightPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterToolbar.cs" />
