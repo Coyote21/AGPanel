@@ -8,6 +8,7 @@ using UnityEngine;
 using KSP.UI.Screens;
 using ToolbarControl_NS;
 using ClickThroughFix;
+using System.IO;
 
 
 namespace AGPanel
@@ -16,10 +17,6 @@ namespace AGPanel
    
     public class AGPanel : MonoBehaviour
     {
-        //Debug Statements
-        public static bool attemptSave = true;
-        
-        
         
         ToolbarControl toolbarControl;
         public static bool editorVisible = true;
@@ -27,19 +24,40 @@ namespace AGPanel
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
-        const float EDITORWIDTH = 350;
-        const float EDITORHEIGHT = 300;
-        public static float editorX = Screen.width / 2 - EDITORWIDTH / 2 + 100;
-        public static float editorY = Screen.height / 2 - EDITORHEIGHT / 2 - 100;
-        public static float flightX = 0f;
-        public static float flightY = 0f;
+        const float EDITORWIDTH = 300;
+        const float EDITORHEIGHT = 150;
+        const float BUTTON_WIDTH = 120.0f;
+        const float BUTTON_HEIGHT = 20.0f;
+        const float TOGGLE_HEIGHT = 20.0f;
+        const float TOGGLE_WIDTH = 20.0f;
+        const float BTYPE_SLIDER_WIDTH = 100.0f;
+        const float BTYPE_SLIDER_HEIGHT = 10.0f;
+        const float BTYPE_SLIDER_THUMB_WIDTH = 30.0f;
+        const float BTYPE_SLIDER_THUMB_HEIGHT = 10.0f;
+        const float LABEL_WIDTH = 40.0f;
+        const int TEXTFIELD_FONTSIZE = 12;
+        const int BUTTON_FONTSIZE = 14;
+        const int LABEL_FONTSIZE = 12;
+        const float TEXTFIELD_WIDTH = 100f;
+        const float TEXTFIELD_HEIGHT = 20.0f;
+        static readonly RectOffset PADDING = new RectOffset(0,0,0,0);
+        static readonly RectOffset MARGINS = new RectOffset(0, 0, 0, 0);
+
 
         internal const string MODID = "AGPanel";
         internal const string MODNAME = "AGPanel";
+ 
+        public class AGPSettings
+        {
+            public float editorPanelX = Screen.width / 2 - EDITORWIDTH / 2 + 100;
+            public float editorPanelY = Screen.height / 2 - EDITORHEIGHT / 2 - 100;
+            public float flightPanelX = Screen.width / 2;
+            public float flightPanelY = Screen.height / 2;
+        }
 
-        public static ConfigNode settingsNode;
+        public static AGPSettings agpSettings = new AGPSettings();
 
-        public static Vessel activeVessel;
+        //public static Vessel activeVessel;
 
         public class LabelRec
         {
@@ -49,13 +67,14 @@ namespace AGPanel
             public Boolean Visible = false;
             public int ButtonType = 0;
 
-            public enum BtnTypes
+            public List<String> BtnTypes = new List<String>
             {
-                Plain,
-                Toggle,
-                OneAndDone
+                "Plain",
+                "Toggle",
+                "Single Use"
             };
 
+            
             public LabelRec(int actionGroup, string label)
             {
                 this.ActionGroup = actionGroup;
@@ -67,7 +86,7 @@ namespace AGPanel
 
             public String Serialise()
             {
-                return (this.Visible ? "1" : "0") + (this.Visible ? "1" : "0") + this.ButtonType.ToString() + this.Label;
+                return (this.Visible ? "1" : "0") + (this.Active ? "1" : "0") + this.ButtonType.ToString() + this.Label;
             }
 
         }
@@ -95,29 +114,29 @@ namespace AGPanel
         {
             AddToolbarButton();
 
-            InvokeRepeating("UpdateSettingsIfNeeded", 5.0f, 5.0f);
+            //InvokeRepeating("UpdateSettingsIfNeeded", 5.0f, 5.0f);
+            GameEvents.onGameSceneSwitchRequested.Add(UpdateSettingsIfNeeded);
 
             //LoadSettings();
         }
 
-        void UpdateSettingsIfNeeded()
+        void UpdateSettingsIfNeeded(GameEvents.FromToAction<GameScenes, GameScenes> data)
         {
             if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
             {
                 bool doSave = false;
-                if (EditorPanel.editorWindowPos.x != editorX || EditorPanel.editorWindowPos.y != editorY)
+                if (EditorPanel.editorWindowPos.x != agpSettings.editorPanelX || EditorPanel.editorWindowPos.y != agpSettings.editorPanelY)
                 {
-                    editorX = EditorPanel.editorWindowPos.x;
-                    editorY = EditorPanel.editorWindowPos.y;
+                    agpSettings.editorPanelX = EditorPanel.editorWindowPos.x;
+                    agpSettings.editorPanelY = EditorPanel.editorWindowPos.y;
                     doSave = true;
                 }
-                if (FlightPanel.flightWindowPos.x != flightX || FlightPanel.flightWindowPos.y != flightY)
+                if (FlightPanel.flightWindowPos.x != agpSettings.flightPanelX || FlightPanel.flightWindowPos.y != agpSettings.flightPanelY)
                 {
-                    flightX = FlightPanel.flightWindowPos.x;
-                    flightY = FlightPanel.flightWindowPos.y;
+                    agpSettings.flightPanelX = FlightPanel.flightWindowPos.x;
+                    agpSettings.flightPanelY = FlightPanel.flightWindowPos.y;
                     doSave = true;
                 }
-
                 if (doSave) SaveSettings();
             }
         }
@@ -144,90 +163,68 @@ namespace AGPanel
             flightVisible = !flightVisible;
         }
 
-        public void OnSave()
-        {
-            //SaveSettings();
-        }
-
         public static void SaveSettings()
         {
-            //Throwaway Node b/c ConfigNode saves only the sub-nodes and not the calling Node itself. 
-            ConfigNode throwAway = new ConfigNode();
+            
+            Debug.Log("AGPanel.SaveSettings: Write JSON");
 
-            //ConfigNode settingsNode = new ConfigNode("AGPanelSettings");
-            //ConfigNode editorPanelNode = new ConfigNode("EditorPosition");
-            //ConfigNode flightPanelNode = new ConfigNode("FlightPosition");
+            try
+            {
+                StreamWriter writer = new StreamWriter(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json", false);
+                writer.WriteLine(JsonUtility.ToJson(agpSettings, true));
+                writer.Close();
+            }
+            catch(Exception exp)
+            {
+                Debug.LogError(exp.Message);
+            }
 
-            //ConfigNode editorPanelNode = settingsNode.GetNode("AGPanelSettings").GetNode("EditorPositon");
-            //ConfigNode flightPanelNode = settingsNode.GetNode("AGPanelSettings").GetNode("FlightPosition");
-
-            ConfigNode[] nodeRay = settingsNode.GetNodes();
-            ConfigNode editorPanelNode = nodeRay[0];
-            ConfigNode flightPanelNode = nodeRay[1];
-
-            editorPanelNode.SetValue("Xpos", editorX, true);
-            editorPanelNode.SetValue("Ypos", editorY, true);
-            //settingsNode.AddNode(editorPanelNode);
-
-            flightPanelNode.SetValue("Xpos", flightX, true);
-            flightPanelNode.SetValue("Ypos", flightY, true);
-            //settingsNode.AddNode(flightPanelNode);
-
-            Debug.LogError("AGPanel.SaveSetings: settingsNode: " + settingsNode.ToString());
-
-            throwAway.AddNode(settingsNode);
-
-            throwAway.Save(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanel.cfg", "AGPanel Settings File");
         }
 
         public static void LoadSettings()
         {
-            
-            ConfigNode rootNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanel.cfg");
-            
-            settingsNode = rootNode.GetNode("AGPanelSettings");
 
-            ConfigNode[] nodeRay = settingsNode.GetNodes();
-            ConfigNode editorPanelNode = nodeRay[0];
-            ConfigNode flightPanelNode = nodeRay[1];
-            
-            //_ = new ConfigNode();
-            //ConfigNode editorPanelNode = settingsNode.GetNode("EditorPositon");
-            editorX = float.Parse(editorPanelNode.GetValue("Xpos"));
-            editorY = float.Parse(editorPanelNode.GetValue("Ypos"));
-            
-            //_ = new ConfigNode();
-            //ConfigNode flightPanelNode = settingsNode.GetNode("FlightPosition");
-            flightX = float.Parse(flightPanelNode.GetValue("Xpos"));
-            flightY = float.Parse(flightPanelNode.GetValue("Ypos"));
+            Debug.Log("AGPanel.LoadSettings: Read JSON");
 
-            Debug.Log("AGPanel.LoadSettings: editorX = " + editorX);
-            Debug.Log("AGPanel.LoadSettings: editorY = " + editorY);
+            if (File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json"))
+            {
+                StreamReader reader = new StreamReader(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json");
+                agpSettings = JsonUtility.FromJson<AGPSettings>(reader.ReadToEnd());
+                reader.Close();
+            }
 
-            EditorPanel.editorWindowPos.x = editorX;
-            EditorPanel.editorWindowPos.y = editorY;
+            EditorPanel.editorWindowPos.x = agpSettings.editorPanelX;
+            EditorPanel.editorWindowPos.y = agpSettings.editorPanelY;
+            FlightPanel.flightWindowPos.x = agpSettings.flightPanelX;
+            FlightPanel.flightWindowPos.y = agpSettings.flightPanelY;
+
         }
 
         [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
         class EditorPanel : MonoBehaviour
         {
             int editorWindowID;            
-            public static Rect editorWindowPos = new Rect(editorX, editorY, EDITORWIDTH, EDITORHEIGHT);
+            public static Rect editorWindowPos = new Rect(agpSettings.editorPanelX, agpSettings.editorPanelX, EDITORWIDTH, EDITORHEIGHT);
 
             void Start()
             {
                 editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
+                LoadSettings();
+                editorWindowPos.x = agpSettings.editorPanelX;
+
                 if (HighLogic.LoadedSceneIsEditor)
                 {
-                    GameEvents.onAboutToSaveShip.Add(StoreAGPDataInPartModule);
-                    GameEvents.onEditorLoad.Add(LoadAGPDataInEditor);
+                    //GameEvents.onAboutToSaveShip.Add(StoreAGPDataEditor);
+                    //GameEvents.onEditorLoad.Add(LoadAGPDataEditor);
                 }
                 else if (HighLogic.LoadedSceneIsFlight)
                 {
-                    activeVessel = FlightGlobals.ActiveVessel;
+                    //activeVessel = FlightGlobals.ActiveVessel;
+                    //May not need this line....test
+                    //GameEvents.onAboutToSaveShip.Remove(StoreAGPDataEditor);
                 }
-                LoadSettings();
+                //LoadSettings();
             }
 
             void OnGUI()
@@ -244,26 +241,61 @@ namespace AGPanel
                 //Needs a lot of work formatting the layout correctly and making pretty-er 
 
                 GUI.enabled = true;
+                HighLogic.Skin.label.fontSize = LABEL_FONTSIZE;
+                HighLogic.Skin.label.alignment = TextAnchor.MiddleCenter;
+                HighLogic.Skin.label.fixedWidth = LABEL_WIDTH;
+                HighLogic.Skin.button.fontSize = BUTTON_FONTSIZE;
+                HighLogic.Skin.textField.fontSize = TEXTFIELD_FONTSIZE;
+                HighLogic.Skin.textField.fixedWidth = TEXTFIELD_WIDTH;
+                HighLogic.Skin.textField.fixedHeight = TEXTFIELD_HEIGHT;
+                HighLogic.Skin.button.fixedHeight = BUTTON_HEIGHT;
+                HighLogic.Skin.button.fixedWidth = BUTTON_WIDTH;
+                HighLogic.Skin.horizontalSlider.fixedWidth = BTYPE_SLIDER_WIDTH;
+                HighLogic.Skin.horizontalSlider.fixedHeight = BTYPE_SLIDER_HEIGHT;
+                HighLogic.Skin.horizontalSliderThumb.fixedWidth = BTYPE_SLIDER_THUMB_WIDTH;
+                HighLogic.Skin.horizontalSliderThumb.fixedHeight = BTYPE_SLIDER_THUMB_HEIGHT;
+                //HighLogic.Skin.textField.padding = PADDING;
+                //HighLogic.Skin.textField.margin = MARGINS;
+                HighLogic.Skin.label.wordWrap = true;
 
                 GUILayout.BeginVertical();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Action Group");
-                GUILayout.Label("Vis");               // Make button active/visible in flight panel
-                GUILayout.Label("Type");               // Make button in flight panel a toggle (not implemented but planing ahead)
+                GUILayout.Label("Vis");               // Make button visible in flight panel
+                GUILayout.Label("Type");               // Make button Normal button, Toggle button or "One click, then remove" button
                 GUILayout.EndHorizontal();
 
                 foreach (LabelRec rec in labelList)
                 {
+                    String currentLabel = rec.Label;
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(String.Format("AG" + rec.ActionGroup + ": "));
-                    rec.Label = GUILayout.TextField(rec.Label, 25);
+                    rec.Label = GUILayout.TextField(rec.Label, 15);
+                    if (rec.Label != currentLabel) rec.Visible = true;      // Auto-toggle Visible if Label is edited
                     rec.Visible = GUILayout.Toggle(rec.Visible, "");
 
+                    GUILayout.BeginVertical();
                     //Checkout Trajectories for adding label to end of slider indicating value
                     rec.ButtonType = Convert.ToInt32(GUILayout.HorizontalSlider((float)rec.ButtonType, 0.0f, 2.0f));
+                    HighLogic.Skin.label.fontSize = 10;
+                    HighLogic.Skin.label.fixedWidth = BTYPE_SLIDER_WIDTH;
+                    RectOffset temp23 = HighLogic.Skin.label.margin;
+                    RectOffset temp24 = HighLogic.Skin.label.padding;
+                    HighLogic.Skin.label.margin = MARGINS;
+                    HighLogic.Skin.label.padding = PADDING;
+                    HighLogic.Skin.label.wordWrap = false;
+                    GUILayout.Label(rec.BtnTypes[rec.ButtonType]);
+                    HighLogic.Skin.label.fontSize = 12;
+                    HighLogic.Skin.label.fixedWidth = LABEL_WIDTH;
+                    HighLogic.Skin.label.margin = temp23;
+                    HighLogic.Skin.label.padding = temp24;
+                    HighLogic.Skin.label.wordWrap = true;
+                    GUILayout.EndVertical();
+                    
                     //Possible alternative if can make btns small enough
                     //rec.ButtonType = GUILayout.Toolbar(rec.ButtonType, Enum.GetNames(typeof(LabelRec.BtnTypes)));
+               
                     GUILayout.EndHorizontal();
                 }
 
@@ -273,47 +305,111 @@ namespace AGPanel
 
             }
 
-            public void StoreAGPDataInPartModule(ShipConstruct s)
+            
+        }
+
+        [KSPAddon(KSPAddon.Startup.Flight, false)]
+        public class FlightPanel : MonoBehaviour
+        {
+            int flightWindowID;
+
+            public static Rect flightWindowPos = new Rect();
+
+            internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
+
+            //Dictionary of KSP Action Groups
+            public static Dictionary<int, KSPActionGroup> dictAG = new Dictionary<int, KSPActionGroup> {
+            { 1,  KSPActionGroup.Custom01 },
+            { 2,  KSPActionGroup.Custom02 },
+            { 3,  KSPActionGroup.Custom03 },
+            { 4,  KSPActionGroup.Custom04 },
+            { 5,  KSPActionGroup.Custom05 },
+            { 6,  KSPActionGroup.Custom06 },
+            { 7,  KSPActionGroup.Custom07 },
+            { 8,  KSPActionGroup.Custom08 },
+            { 9,  KSPActionGroup.Custom09 },
+            { 10, KSPActionGroup.Custom10 },
+            { 11, KSPActionGroup.Light },
+            { 12, KSPActionGroup.RCS },
+            { 13, KSPActionGroup.SAS },
+            { 14, KSPActionGroup.Brakes },
+            { 15, KSPActionGroup.Abort },
+            { 16, KSPActionGroup.Gear }
+        };
+
+            void Start()
             {
-                AGPModule storageModule;
+                //activeVessel = FlightGlobals.ActiveVessel;
 
-                if (EditorLogic.RootPart.Modules.Contains("AGPModule"))
-                {
-                    storageModule = EditorLogic.RootPart.Modules.GetModule<AGPModule>();
+                flightWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
-                    foreach (LabelRec rec in labelList)
-                    {
-                        storageModule.Fields.SetValue("AG" + rec.ActionGroup, rec.Serialise());
-                        //Debug.Log("AGPanel: EditorPanel: StoreAGPData: SetValue: AG" + rec.ActionGroup + " = " + rec.Serialise());
-                    }
-                }
+                //Load Windows pos
+                LoadSettings();
+            
             }
 
-            public void LoadAGPDataInEditor(ShipConstruct s, KSP.UI.Screens.CraftBrowserDialog.LoadType loadType)
+            
+
+            void OnGUI()
             {
-                // This is not working, it is pulling default data from somewhere other than the .craft files, maybe its
-                // holding on to the values from before the load?
-                // I think I will need to change EditorLogic.RootPart for something else???
+                GUI.skin = HighLogic.Skin;
+                if (flightVisible)
+                    flightWindowPos = ClickThruBlocker.GUILayoutWindow(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
+                //flightWindowPos = GUILayout.Window(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
+                               
+            }
 
+            void DrawFlightWindow(int id)
+            {
+                //Needs to be smaller, prettyer etc and maybe add a large red button somewhere for abort AG?
 
-                AGPModule storageModule = EditorLogic.RootPart.Modules.GetModule<AGPModule>();
+                int visibleBtnCount = 0;
 
-                for (int i = 0; i < labelList.Count; i++)
+                GUI.enabled = (FlightGlobals.ActiveVessel != null);
+
+                GUILayout.BeginVertical();
+
+                //Loop through the buttons that are set to be shown
+                foreach (LabelRec rec in labelList)
                 {
-                    String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
-
-                    labelList[i].Visible = value.Substring(0, 1).Equals("1");
-                    //labelList[i].Active = value.Substring(1, 1).Equals("1");
-                    labelList[i].Active = false;
-                    labelList[i].ButtonType = (int.Parse(value.Substring(2, 1)));
-                    labelList[i].Label = value.Substring(3);
-                    //Debug.Log("AGPanel: EditorPanel: LoadAGPData: value = " + value);
-                    //Debug.Log("AGPanel: EditorPanel: LoadAGPData: labeList[" + i + "].Label = " + value.Substring(3));
+                    if (rec.Visible)
+                    {
+                        visibleBtnCount++;
+                        if (rec.ButtonType == 1) //Toggle Button
+                        {
+                            if (GUILayout.Toggle(rec.Active, rec.Label, HighLogic.Skin.button) != rec.Active)
+                            {
+                                rec.Active = !rec.Active;
+                                ActivateActionGroup(rec.ActionGroup);
+                                Debug.Log("AGPanel.DrawFlightWindow: Button: " + rec.Label + " is " + rec.Active);
+                            }
+                        }
+                        else
+                        {
+                            if (GUILayout.Button(rec.Label)) // Normal Button
+                            {
+                                ActivateActionGroup(rec.ActionGroup);
+                                if (rec.ButtonType == 2)  // Click Once then Remove Button
+                                {
+                                    rec.Visible = false;
+                                    visibleBtnCount--;
+                                    flightWindowPos.height -= HighLogic.Skin.button.lineHeight + 20.0f;
+                                }
+                            }
+                        }
+                    }
                 }
+
+                GUILayout.EndVertical();
+                flightVisible = visibleBtnCount > 0;
+                GUI.DragWindow();
+            }
+
+            private static void ActivateActionGroup(int ag)
+            {
+                FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[ag]);
             }
         }
 
     }
-
-    
 }

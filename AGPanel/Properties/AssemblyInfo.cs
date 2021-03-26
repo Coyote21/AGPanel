@@ -38,5 +38,5 @@ using System.Runtime.InteropServices;
 // Added because LGG said to
 [assembly: KSPAssemblyDependency("ClickThroughBlocker", 1, 0)]
 [assembly: KSPAssemblyDependency("ToolbarController", 1, 0)]
-[assembly: KSPAssemblyDependency("VesselModuleSave", 1, 0)]
+//[assembly: KSPAssemblyDependency("VesselModuleSave", 1, 0)]
 

@@ -14,10 +14,7 @@ namespace AGPanel
     public class FlightPanel : MonoBehaviour
     {
         int flightWindowID;
-        //float flightWindowX = 0f;
-        //float flightWindowY = 0f;
-
-
+       
         public static Rect flightWindowPos = new Rect();
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
@@ -42,25 +39,6 @@ namespace AGPanel
             { 16, KSPActionGroup.Gear }
         };
  
-       //public static List<AGPanel.LabelRec> flightLabelList = new List<AGPanel.LabelRec> {
-       //     new AGPanel.LabelRec(1, "Custom01"),
-       //     new AGPanel.LabelRec(2, "Custom02"),
-       //     new AGPanel.LabelRec(3, "Custom03"),
-       //     new AGPanel.LabelRec(4, "Custom04"),
-       //     new AGPanel.LabelRec(5, "Custom05"),
-       //     new AGPanel.LabelRec(6, "Custom06"),
-       //     new AGPanel.LabelRec(7, "Custom07"),
-       //     new AGPanel.LabelRec(8, "Custom08"),
-       //     new AGPanel.LabelRec(9, "Custom09"),
-       //     new AGPanel.LabelRec(10, "Custom10"),
-       //     new AGPanel.LabelRec(11, "Light"),
-       //     new AGPanel.LabelRec(12, "RCS"),
-       //     new AGPanel.LabelRec(13, "SAS"),
-       //     new AGPanel.LabelRec(14, "Brakes"),
-       //     new AGPanel.LabelRec(15, "Abort"),
-       //     new AGPanel.LabelRec(16, "Gear"),
-       // };
-
         void Start()
         {
             AGPanel.activeVessel = FlightGlobals.ActiveVessel;
@@ -83,7 +61,7 @@ namespace AGPanel
                 String value = storageModule.Fields.GetValue<String>("AG" + (i + 1));
 
                 AGPanel.labelList[i].Visible = value.Substring(0, 1).Equals("1");
-                AGPanel.labelList[i].Visible = value.Substring(1, 1).Equals("1");
+                AGPanel.labelList[i].Active = value.Substring(1, 1).Equals("1");
                 AGPanel.labelList[i].ButtonType = (int.Parse(value.Substring(2, 1)));
                 AGPanel.labelList[i].Label = value.Substring(3);
             }
@@ -103,19 +81,15 @@ namespace AGPanel
             //Needs to be smaller, prettyer etc and maybe add a large red button somewhere for abort AG?
            
             GUI.enabled = (FlightGlobals.ActiveVessel != null);
-            
-            //Need to repalce with pos loaded from file
-            //flightWindowPos.x = 100;
-            //flightWindowPos.y = 100;
-            
+
             GUILayout.BeginVertical();
 
-            //Loop through the buttons-action groups that are set to be shown
+            //Loop through the buttons that are set to be shown
             foreach (AGPanel.LabelRec rec in AGPanel.labelList)
             {
                 if (rec.Visible)
                 {
-                    if (rec.ButtonType == 1)
+                    if (rec.ButtonType == 1) //Toggle Button
                     {
                         if(GUILayout.Toggle(rec.Active, rec.Label, HighLogic.Skin.button) != rec.Active)
                         {
@@ -125,10 +99,10 @@ namespace AGPanel
                     }
                     else
                     {
-                        if (GUILayout.Button(rec.Label))
+                        if (GUILayout.Button(rec.Label)) // Normal Button
                         {
                             ActivateActionGroup(rec.ActionGroup);
-                            if (rec.ButtonType == 2)
+                            if (rec.ButtonType == 2)  // Click Once then Remove Button
                             {
                                 rec.Visible = false;
                                 OnGUI();
@@ -145,6 +119,8 @@ namespace AGPanel
 
         private static void ActivateActionGroup(int ag)
         {
+            
+            
             FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[ag]);
         }
     }
