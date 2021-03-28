@@ -18,35 +18,44 @@ namespace AGPanel
     public class AGPanel : MonoBehaviour
     {
         
-        ToolbarControl toolbarControl;
+        //ToolbarControl toolbarControl;
         public static bool editorVisible = true;
         public static bool flightVisible = true;
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
-        const float EDITORWIDTH = 300;
+        // Editor Panel GUIStyle constants
+        const float EDITORWIDTH = 250;
         const float EDITORHEIGHT = 150;
-        const float BUTTON_WIDTH = 120.0f;
-        const float BUTTON_HEIGHT = 20.0f;
+
+        const float LABELHEADINGS_HEIGHT = 25.0f;
+        const int HEADING_FONTSIZE = 14;
+
+        const float LINE_HEIGHT = 30.0f;
+        
+        const int LABELAG_FONTSIZE = 14;
+        const float LABELAG_WIDTH = 40.0f;
+        const float LABELAG_HEIGHT = 20.0f;
+        const int TEXTFIELD_FONTSIZE = 14;
+        const float TEXTFIELD_WIDTH = 120f;
+        const float TEXTFIELD_HEIGHT = 18.0f;
+        const float TOGGLE_WIDTH = 30.0f;
         const float TOGGLE_HEIGHT = 20.0f;
-        const float TOGGLE_WIDTH = 20.0f;
+        
+        const float TOOLBARBUTTON_WIDTH = 20.0f;
+        const float TOOLBARBUTTON_HEIGHT = 20.0f;
+
         const float BTYPE_SLIDER_WIDTH = 100.0f;
-        const float BTYPE_SLIDER_HEIGHT = 10.0f;
+        const float BTYPE_SLIDER_HEIGHT = 8.0f;
         const float BTYPE_SLIDER_THUMB_WIDTH = 30.0f;
-        const float BTYPE_SLIDER_THUMB_HEIGHT = 10.0f;
-        const float LABEL_WIDTH = 40.0f;
-        const int TEXTFIELD_FONTSIZE = 12;
+        const float BTYPE_SLIDER_THUMB_HEIGHT = 7.5f;
+        const float BTYPE_DESC_HEIGHT = 7.0f;
+
+        // Flight Panel GUIStyle constants
+        const float BUTTON_WIDTH = 120.0f;
+        const float BUTTON_HEIGHT = 20.0f;        
         const int BUTTON_FONTSIZE = 14;
-        const int LABEL_FONTSIZE = 12;
-        const float TEXTFIELD_WIDTH = 100f;
-        const float TEXTFIELD_HEIGHT = 20.0f;
-        static readonly RectOffset PADDING = new RectOffset(0,0,0,0);
-        static readonly RectOffset MARGINS = new RectOffset(0, 0, 0, 0);
-
-
-        internal const string MODID = "AGPanel";
-        internal const string MODNAME = "AGPanel";
- 
+        
         public class AGPSettings
         {
             public float editorPanelX = Screen.width / 2 - EDITORWIDTH / 2 + 100;
@@ -56,8 +65,6 @@ namespace AGPanel
         }
 
         public static AGPSettings agpSettings = new AGPSettings();
-
-        //public static Vessel activeVessel;
 
         public class LabelRec
         {
@@ -112,12 +119,7 @@ namespace AGPanel
 
         void Start()
         {
-            AddToolbarButton();
-
-            //InvokeRepeating("UpdateSettingsIfNeeded", 5.0f, 5.0f);
             GameEvents.onGameSceneSwitchRequested.Add(UpdateSettingsIfNeeded);
-
-            //LoadSettings();
         }
 
         void UpdateSettingsIfNeeded(GameEvents.FromToAction<GameScenes, GameScenes> data)
@@ -139,28 +141,6 @@ namespace AGPanel
                 }
                 if (doSave) SaveSettings();
             }
-        }
-
-        void AddToolbarButton()
-        {
-            if (toolbarControl == null)
-            {
-                toolbarControl = gameObject.AddComponent<ToolbarControl>();
-                toolbarControl.AddToAllToolbars(WindowToggle, WindowToggle,
-                    ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
-                    MODID,
-                    "AGPanel",
-                    "AGPanel/Icon/AGPanel-38",
-                    "AGPanel/Icon/AGPanel-24",
-                    MODNAME
-                    );
-            }
-        }
-
-        void WindowToggle()
-        {
-            editorVisible = !editorVisible;
-            flightVisible = !flightVisible;
         }
 
         public static void SaveSettings()
@@ -201,32 +181,126 @@ namespace AGPanel
         }
 
         [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
-        class EditorPanel : MonoBehaviour
+        public class EditorPanel : MonoBehaviour
         {
-            int editorWindowID;            
+            int editorWindowID;
             public static Rect editorWindowPos = new Rect(agpSettings.editorPanelX, agpSettings.editorPanelX, EDITORWIDTH, EDITORHEIGHT);
+
+            internal const string MODID = "AGPEditor";
+            internal const string MODNAME = "AGPEditor";
+            ToolbarControl toolbarControl;
+
+            GUIStyle editorHeadingAG;
+            GUIStyle editorHeadingLabel;
+            GUIStyle editorHeadingVis;
+            GUIStyle editorHeadingBtnType;
+            
+            GUIStyle editorLabelAG;
+            GUIStyle editorTextField;
+            GUIStyle toggleLight;
+            GUIStyle toolbarButtons;
+            
+            GUIStyle editorSlider;
+            GUIStyle editorSliderThumb;
+            GUIStyle editorBtnTypeDesc;
 
             void Start()
             {
                 editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
+                AddToolbarButton();
                 LoadSettings();
-                editorWindowPos.x = agpSettings.editorPanelX;
-
-                if (HighLogic.LoadedSceneIsEditor)
-                {
-                    //GameEvents.onAboutToSaveShip.Add(StoreAGPDataEditor);
-                    //GameEvents.onEditorLoad.Add(LoadAGPDataEditor);
-                }
-                else if (HighLogic.LoadedSceneIsFlight)
-                {
-                    //activeVessel = FlightGlobals.ActiveVessel;
-                    //May not need this line....test
-                    //GameEvents.onAboutToSaveShip.Remove(StoreAGPDataEditor);
-                }
-                //LoadSettings();
+                SetGUIStyles(); 
             }
 
+            void SetGUIStyles()
+            {
+
+                editorHeadingAG = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = HEADING_FONTSIZE,
+                    alignment = TextAnchor.LowerCenter,
+                    fixedWidth = LABELAG_WIDTH,
+                    fixedHeight = LABELHEADINGS_HEIGHT,
+                    wordWrap = true
+                };
+
+                editorHeadingLabel = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = HEADING_FONTSIZE,
+                    alignment = TextAnchor.LowerCenter,
+                    fixedWidth = TEXTFIELD_WIDTH,
+                    fixedHeight = LABELHEADINGS_HEIGHT
+                };
+
+                editorHeadingVis = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = HEADING_FONTSIZE,
+                    alignment = TextAnchor.LowerCenter,
+                    fixedWidth = TOGGLE_WIDTH,
+                    fixedHeight = LABELHEADINGS_HEIGHT
+                };
+
+                editorHeadingBtnType = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = HEADING_FONTSIZE,
+                    alignment = TextAnchor.LowerCenter,
+                    fixedWidth = BTYPE_SLIDER_WIDTH,
+                    fixedHeight = LABELHEADINGS_HEIGHT
+                };
+
+                editorLabelAG = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = LABELAG_FONTSIZE,
+                    alignment = TextAnchor.UpperCenter,
+                    fixedWidth = LABELAG_WIDTH,
+                    fixedHeight = LINE_HEIGHT,
+                    wordWrap = false
+                };
+
+                editorTextField = new GUIStyle(HighLogic.Skin.GetStyle("textField"))
+                {
+                    fontSize = TEXTFIELD_FONTSIZE,
+                    fixedWidth = TEXTFIELD_WIDTH,
+                    fixedHeight = TEXTFIELD_HEIGHT,
+                    alignment = TextAnchor.MiddleLeft
+                };
+
+                toggleLight = new GUIStyle(HighLogic.Skin.GetStyle("toggle"))
+                {
+                    fixedWidth = TOGGLE_WIDTH,
+                    fixedHeight = LINE_HEIGHT
+                };
+
+                toolbarButtons = new GUIStyle(HighLogic.Skin.GetStyle("button"))
+                {
+                    fixedWidth = TOOLBARBUTTON_WIDTH,
+                    fixedHeight = TOOLBARBUTTON_HEIGHT
+                };
+
+                editorSlider = new GUIStyle(HighLogic.Skin.GetStyle("horizontalSlider"))
+                {
+                    fixedWidth = BTYPE_SLIDER_WIDTH,
+                    fixedHeight = BTYPE_SLIDER_HEIGHT,
+                };
+
+                editorSliderThumb = new GUIStyle(HighLogic.Skin.GetStyle("horizontalSliderThumb"))
+                {
+                    fixedWidth = BTYPE_SLIDER_THUMB_WIDTH,
+                    fixedHeight = BTYPE_SLIDER_THUMB_HEIGHT
+                };
+                
+                editorBtnTypeDesc = new GUIStyle(HighLogic.Skin.GetStyle("label"))
+                {
+                    fontSize = 10,
+                    fixedWidth = BTYPE_SLIDER_WIDTH - 2,
+                    fixedHeight = BTYPE_DESC_HEIGHT,
+                    alignment = TextAnchor.UpperCenter,
+                    wordWrap = false
+                };
+
+            }
+    
             void OnGUI()
             {
                 GUI.skin = HighLogic.Skin;
@@ -238,64 +312,51 @@ namespace AGPanel
 
             void DrawEditorWindow(int id)
             {
-                //Needs a lot of work formatting the layout correctly and making pretty-er 
+                // Needs a lot of work formatting the layout correctly and making pretty-er 
+                // Want to add facility to save current setup as a preset and load previous presets to replace current setup
 
                 GUI.enabled = true;
-                HighLogic.Skin.label.fontSize = LABEL_FONTSIZE;
-                HighLogic.Skin.label.alignment = TextAnchor.MiddleCenter;
-                HighLogic.Skin.label.fixedWidth = LABEL_WIDTH;
-                HighLogic.Skin.button.fontSize = BUTTON_FONTSIZE;
-                HighLogic.Skin.textField.fontSize = TEXTFIELD_FONTSIZE;
-                HighLogic.Skin.textField.fixedWidth = TEXTFIELD_WIDTH;
-                HighLogic.Skin.textField.fixedHeight = TEXTFIELD_HEIGHT;
-                HighLogic.Skin.button.fixedHeight = BUTTON_HEIGHT;
-                HighLogic.Skin.button.fixedWidth = BUTTON_WIDTH;
-                HighLogic.Skin.horizontalSlider.fixedWidth = BTYPE_SLIDER_WIDTH;
-                HighLogic.Skin.horizontalSlider.fixedHeight = BTYPE_SLIDER_HEIGHT;
-                HighLogic.Skin.horizontalSliderThumb.fixedWidth = BTYPE_SLIDER_THUMB_WIDTH;
-                HighLogic.Skin.horizontalSliderThumb.fixedHeight = BTYPE_SLIDER_THUMB_HEIGHT;
-                //HighLogic.Skin.textField.padding = PADDING;
-                //HighLogic.Skin.textField.margin = MARGINS;
-                HighLogic.Skin.label.wordWrap = true;
 
                 GUILayout.BeginVertical();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Action Group");
-                GUILayout.Label("Vis");               // Make button visible in flight panel
-                GUILayout.Label("Type");               // Make button Normal button, Toggle button or "One click, then remove" button
+                GUILayout.Label("Action Group", editorHeadingAG);
+                GUILayout.Label("\nLabel", editorHeadingLabel);
+                GUILayout.Label("\nVis", editorHeadingVis);               // Make button visible in flight panel
+                GUILayout.Label("\nType", editorHeadingBtnType);               // Make button Normal button, Toggle button or "One click, then remove" button
                 GUILayout.EndHorizontal();
 
                 foreach (LabelRec rec in labelList)
                 {
                     String currentLabel = rec.Label;
+                    Boolean currentVis = rec.Visible;
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(String.Format("AG" + rec.ActionGroup + ": "));
-                    rec.Label = GUILayout.TextField(rec.Label, 15);
-                    if (rec.Label != currentLabel) rec.Visible = true;      // Auto-toggle Visible if Label is edited
-                    rec.Visible = GUILayout.Toggle(rec.Visible, "");
-
-                    GUILayout.BeginVertical();
-                    //Checkout Trajectories for adding label to end of slider indicating value
-                    rec.ButtonType = Convert.ToInt32(GUILayout.HorizontalSlider((float)rec.ButtonType, 0.0f, 2.0f));
-                    HighLogic.Skin.label.fontSize = 10;
-                    HighLogic.Skin.label.fixedWidth = BTYPE_SLIDER_WIDTH;
-                    RectOffset temp23 = HighLogic.Skin.label.margin;
-                    RectOffset temp24 = HighLogic.Skin.label.padding;
-                    HighLogic.Skin.label.margin = MARGINS;
-                    HighLogic.Skin.label.padding = PADDING;
-                    HighLogic.Skin.label.wordWrap = false;
-                    GUILayout.Label(rec.BtnTypes[rec.ButtonType]);
-                    HighLogic.Skin.label.fontSize = 12;
-                    HighLogic.Skin.label.fixedWidth = LABEL_WIDTH;
-                    HighLogic.Skin.label.margin = temp23;
-                    HighLogic.Skin.label.padding = temp24;
-                    HighLogic.Skin.label.wordWrap = true;
-                    GUILayout.EndVertical();
                     
-                    //Possible alternative if can make btns small enough
-                    //rec.ButtonType = GUILayout.Toolbar(rec.ButtonType, Enum.GetNames(typeof(LabelRec.BtnTypes)));
-               
+                    // AGx: Label
+                    GUILayout.Label(String.Format("AG" + rec.ActionGroup + ": "), editorLabelAG);
+                    
+                    // Custom Label TextField (Text to appear on button in Flight Panel)
+                    rec.Label = GUILayout.TextField(rec.Label, 15, editorTextField);
+                    if (rec.Label != currentLabel) rec.Visible = true;      // Auto-toggle Visible if Label is edited
+                    
+                    // Visibility Toggle (Show in Flight Panel T/F)
+                    rec.Visible = GUILayout.Toggle(rec.Visible, "", toggleLight);
+                    if ((rec.Visible != currentVis) && !rec.Visible) FlightPanel.flightWindowPos.height -= (BUTTON_HEIGHT + 5f);
+                    if (rec.Visible && !flightVisible) flightVisible = true;
+                    
+                    // Button Type - Normal, Toggle or Single Use.
+                    GUILayout.BeginVertical();
+                    rec.ButtonType = Convert.ToInt32(GUILayout.HorizontalSlider((float)rec.ButtonType, 0.0f, 2.0f, editorSlider, editorSliderThumb));
+                    GUILayout.Label(rec.BtnTypes[rec.ButtonType], editorBtnTypeDesc);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndVertical();
+
+                    // Possible alternative to slider
+                    //String[] toolbarStrings = { "P", "T", "1" };
+                    //rec.ButtonType = GUILayout.Toolbar(rec.ButtonType, toolbarStrings, toolbarButtons);
+
+                    // Another alternative, try to do a dropdown selector?
+
                     GUILayout.EndHorizontal();
                 }
 
@@ -305,15 +366,40 @@ namespace AGPanel
 
             }
 
-            
+            void AddToolbarButton()
+            {
+                if (toolbarControl == null)
+                {
+                    toolbarControl = gameObject.AddComponent<ToolbarControl>();
+                    toolbarControl.AddToAllToolbars(WindowToggle, WindowToggle,
+                        ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
+                        MODID,
+                        "AGPanel",
+                        "AGPanel/Icon/AGPEditor-38",
+                        "AGPanel/Icon/AGPEditor-24",
+                        MODNAME
+                        );
+                }
+            }
+
+            void WindowToggle()
+            {
+                editorVisible = !editorVisible;
+            }
+
+
         }
 
         [KSPAddon(KSPAddon.Startup.Flight, false)]
         public class FlightPanel : MonoBehaviour
         {
             int flightWindowID;
-
             public static Rect flightWindowPos = new Rect();
+            GUIStyle flightButtons;
+
+            internal const string MODID = "AGPFlight";
+            internal const string MODNAME = "AGPFlight";
+            ToolbarControl toolbarControl;
 
             internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
 
@@ -339,29 +425,39 @@ namespace AGPanel
 
             void Start()
             {
-                //activeVessel = FlightGlobals.ActiveVessel;
 
                 flightWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
+                AddToolbarButton();
+
                 //Load Windows pos
                 LoadSettings();
-            
+                SetGUIStyles();
             }
 
-            
+            void SetGUIStyles()
+            {
+                flightButtons = new GUIStyle(HighLogic.Skin.GetStyle("button"))
+                {
+                    fontSize = BUTTON_FONTSIZE,
+                    fixedWidth = BUTTON_WIDTH,
+                    fixedHeight = BUTTON_HEIGHT
+                };
+            }
 
             void OnGUI()
             {
                 GUI.skin = HighLogic.Skin;
                 if (flightVisible)
+                {
                     flightWindowPos = ClickThruBlocker.GUILayoutWindow(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
-                //flightWindowPos = GUILayout.Window(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
-                               
+                    //flightWindowPos = GUILayout.Window(flightWindowID, flightWindowPos, DrawFlightWindow, "AG Flight Panel");
+                }
             }
 
             void DrawFlightWindow(int id)
             {
-                //Needs to be smaller, prettyer etc and maybe add a large red button somewhere for abort AG?
+                // Maybe add a large red button somewhere for abort AG? Or make possible to chose color of every button?
 
                 int visibleBtnCount = 0;
 
@@ -377,7 +473,7 @@ namespace AGPanel
                         visibleBtnCount++;
                         if (rec.ButtonType == 1) //Toggle Button
                         {
-                            if (GUILayout.Toggle(rec.Active, rec.Label, HighLogic.Skin.button) != rec.Active)
+                            if (GUILayout.Toggle(rec.Active, rec.Label, flightButtons) != rec.Active)
                             {
                                 rec.Active = !rec.Active;
                                 ActivateActionGroup(rec.ActionGroup);
@@ -386,28 +482,48 @@ namespace AGPanel
                         }
                         else
                         {
-                            if (GUILayout.Button(rec.Label)) // Normal Button
+                            if (GUILayout.Button(rec.Label, flightButtons)) // Normal Button
                             {
                                 ActivateActionGroup(rec.ActionGroup);
                                 if (rec.ButtonType == 2)  // Click Once then Remove Button
                                 {
                                     rec.Visible = false;
                                     visibleBtnCount--;
-                                    flightWindowPos.height -= HighLogic.Skin.button.lineHeight + 20.0f;
+                                    flightWindowPos.height -= (BUTTON_HEIGHT + 5f);
                                 }
                             }
                         }
                     }
                 }
-
                 GUILayout.EndVertical();
-                flightVisible = visibleBtnCount > 0;
+                if (visibleBtnCount == 0) flightVisible = false;
                 GUI.DragWindow();
             }
 
             private static void ActivateActionGroup(int ag)
             {
                 FlightGlobals.ActiveVessel.ActionGroups.ToggleGroup(dictAG[ag]);
+            }
+
+            void AddToolbarButton()
+            {
+                if (toolbarControl == null)
+                {
+                    toolbarControl = gameObject.AddComponent<ToolbarControl>();
+                    toolbarControl.AddToAllToolbars(WindowToggle, WindowToggle,
+                        ApplicationLauncher.AppScenes.FLIGHT,
+                        MODID,
+                        "AGPanel",
+                        "AGPanel/Icon/AGPFlight-38",
+                        "AGPanel/Icon/AGPFlight-24",
+                        MODNAME
+                        );
+                }
+            }
+
+            void WindowToggle()
+            {
+                flightVisible = !flightVisible;
             }
         }
 

@@ -56,7 +56,6 @@ namespace AGPanel
             {
                 node.SetValue("AG" + rec.ActionGroup, rec.Serialise(), true);
                 this.Fields.SetValue("AG" + rec.ActionGroup, rec.Serialise());
-                //Debug.Log("AGPanel.AGPModule: OnSave: Save: AG" + rec.ActionGroup + " = " + rec.Serialise());
             }
             base.OnSave(node);
         }
@@ -69,7 +68,6 @@ namespace AGPanel
 
                 if (value.Length > 0)
                 {
-                    //Debug.Log("AGPanel.AGPModule: OnLoad: value = " + value);
                     rec.Visible = value.Substring(0, 1).Equals("1");
                     rec.Active = value.Substring(1, 1).Equals("1");
                     rec.ButtonType = (int.Parse(value.Substring(2, 1)));

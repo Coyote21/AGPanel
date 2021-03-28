@@ -8,7 +8,8 @@ namespace AGPanel
 	{
 		void Start()
 		{
-			ToolbarControl.RegisterMod(AGPanel.MODID, AGPanel.MODNAME);
+			ToolbarControl.RegisterMod(AGPanel.EditorPanel.MODID, AGPanel.EditorPanel.MODNAME);
+			ToolbarControl.RegisterMod(AGPanel.FlightPanel.MODID, AGPanel.FlightPanel.MODNAME);
 		}
 	}
 }
