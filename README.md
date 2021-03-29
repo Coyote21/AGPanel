@@ -17,3 +17,8 @@ Would like to offer additional colours for buttons (Beyond the Abort Group being
 
 Need to make it possible to delete presets (Currently can only be done by editing the text file)
 
+## Dependencies
+Toolbar Controller (https://forum.kerbalspaceprogram.com/index.php?/topic/169509-19x-toolbar-controller-for-modders/)
+
+Click Through Blocker (https://forum.kerbalspaceprogram.com/index.php?/topic/170747-19x-110x-click-through-blocker-new-dependency/)
+
