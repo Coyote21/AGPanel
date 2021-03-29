@@ -22,3 +22,5 @@ Toolbar Controller (https://forum.kerbalspaceprogram.com/index.php?/topic/169509
 
 Click Through Blocker (https://forum.kerbalspaceprogram.com/index.php?/topic/170747-19x-110x-click-through-blocker-new-dependency/)
 
+Module Manager (https://forum.kerbalspaceprogram.com/index.php?/topic/50533-18x-110x-module-manager-414-july-7th-2020-locked-inside-edition/)
+
