@@ -19,7 +19,7 @@ namespace AGPanel
     {
         
         //ToolbarControl toolbarControl;
-        public static bool editorVisible = true;
+        public static bool editorVisible = false;
         public static bool flightVisible = true;
 
         internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
@@ -55,7 +55,13 @@ namespace AGPanel
         const float BUTTON_WIDTH = 120.0f;
         const float BUTTON_HEIGHT = 20.0f;        
         const int BUTTON_FONTSIZE = 14;
+
+
+        //Texture2D normal = GameDatabase.Instance.GetTexture("ScienceRelay/Resources/Relay_Normal", false);
+        public static Texture2D redPic = GameDatabase.Instance.GetTexture("AGPanel/Icon/red", false);
         
+
+
         public class AGPSettings
         {
             public float editorPanelX = Screen.width / 2 - EDITORWIDTH / 2 + 100;
@@ -66,7 +72,8 @@ namespace AGPanel
 
         public static AGPSettings agpSettings = new AGPSettings();
 
-        public class LabelRec
+        [Serializable]
+        public class LabelRec 
         {
             public int ActionGroup;
             public String Label;
@@ -97,7 +104,7 @@ namespace AGPanel
             }
 
         }
-
+        
         public static List<LabelRec> labelList = new List<LabelRec> {
             new LabelRec(1, "Custom01"),
             new LabelRec(2, "Custom02"),
@@ -116,6 +123,23 @@ namespace AGPanel
             new LabelRec(15, "Abort"),
             new LabelRec(16, "Gear"),
         };
+
+        [Serializable]
+        public class Preset
+        {
+            public String name;
+            public List<String> labels = new List<String>();
+
+            public Preset (String s, List<LabelRec> lt)
+            {
+                this.name = s;
+
+                foreach (LabelRec rec in lt)
+                {
+                    this.labels.Add(rec.Serialise());
+                }
+            }
+        }
 
         void Start()
         {
@@ -146,11 +170,9 @@ namespace AGPanel
         public static void SaveSettings()
         {
             
-            Debug.Log("AGPanel.SaveSettings: Write JSON");
-
             try
             {
-                StreamWriter writer = new StreamWriter(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json", false);
+                StreamWriter writer = new StreamWriter(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json", false);
                 writer.WriteLine(JsonUtility.ToJson(agpSettings, true));
                 writer.Close();
             }
@@ -164,13 +186,15 @@ namespace AGPanel
         public static void LoadSettings()
         {
 
-            Debug.Log("AGPanel.LoadSettings: Read JSON");
-
-            if (File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json"))
+            if (File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json"))
             {
-                StreamReader reader = new StreamReader(KSPUtil.ApplicationRootPath + "GameData/AGpanel/Plugins/AGPanelSettings.json");
+                StreamReader reader = new StreamReader(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json");
                 agpSettings = JsonUtility.FromJson<AGPSettings>(reader.ReadToEnd());
                 reader.Close();
+            }
+            else
+            {
+                SaveSettings();
             }
 
             EditorPanel.editorWindowPos.x = agpSettings.editorPanelX;
@@ -187,7 +211,8 @@ namespace AGPanel
             public static Rect editorWindowPos = new Rect(agpSettings.editorPanelX, agpSettings.editorPanelX, EDITORWIDTH, EDITORHEIGHT);
 
             internal const string MODID = "AGPEditor";
-            internal const string MODNAME = "AGPEditor";
+            internal const string MODNAME = "AGP Editor";
+            private const int Vnotwork = 4;
             ToolbarControl toolbarControl;
 
             GUIStyle editorHeadingAG;
@@ -208,9 +233,23 @@ namespace AGPanel
             {
                 editorWindowID = UnityEngine.Random.Range(1000, 20000000) + _AssemblyName.GetHashCode();
 
+                GameEvents.onGUIActionGroupShown.Add(ShowEditor);
+                GameEvents.onGUIActionGroupFlightShown.Add(ShowEditor);
+                GameEvents.onGUIActionGroupClosed.Add(HideEditor);
+
                 AddToolbarButton();
                 LoadSettings();
                 SetGUIStyles(); 
+            }
+
+            void ShowEditor()
+            {
+                editorVisible = true;
+            }
+
+            void HideEditor()
+            {
+                editorVisible = false;
             }
 
             void SetGUIStyles()
@@ -281,7 +320,7 @@ namespace AGPanel
                 editorSlider = new GUIStyle(HighLogic.Skin.GetStyle("horizontalSlider"))
                 {
                     fixedWidth = BTYPE_SLIDER_WIDTH,
-                    fixedHeight = BTYPE_SLIDER_HEIGHT,
+                    fixedHeight = BTYPE_SLIDER_HEIGHT
                 };
 
                 editorSliderThumb = new GUIStyle(HighLogic.Skin.GetStyle("horizontalSliderThumb"))
@@ -313,8 +352,7 @@ namespace AGPanel
             void DrawEditorWindow(int id)
             {
                 // Needs a lot of work formatting the layout correctly and making pretty-er 
-                // Want to add facility to save current setup as a preset and load previous presets to replace current setup
-
+                
                 GUI.enabled = true;
 
                 GUILayout.BeginVertical();
@@ -357,14 +395,143 @@ namespace AGPanel
 
                     // Another alternative, try to do a dropdown selector?
 
+
                     GUILayout.EndHorizontal();
                 }
 
                 GUILayout.EndVertical();
 
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Load Preset"))
+                {
+                    LoadPresetPopup();
+                }
+                if (GUILayout.Button("Save as Preset"))
+                {
+                    SavePresetPopup();
+                }
+                GUILayout.EndHorizontal();
+               
                 GUI.DragWindow();
 
             }
+
+            void LoadPresetPopup()
+            {
+                // Need to prevent keyboard and mouse clicks from passing thru popup.
+
+                ConfigNode rootNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
+
+                List<DialogGUIBase> guiBaseList = new List<DialogGUIBase>();
+                guiBaseList.Add(new DialogGUIFlexibleSpace());
+
+                foreach (ConfigNode cn in rootNode.GetNodes())
+                {
+                    guiBaseList.Add(new DialogGUIButton(cn.name,
+                                delegate
+                                {
+                                    LoadPreset(cn);
+                                }, 140.0f, 30.0f, true));
+                }
+
+                guiBaseList.Add(new DialogGUIButton("Close", () => { }, 140.0f, 30.0f, true));
+
+                DialogGUIVerticalLayout vertLayout = new DialogGUIVerticalLayout(guiBaseList.ToArray());
+                
+
+                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    new MultiOptionDialog("LoadPreset",
+                        "",
+                        "Load Preset",
+                        HighLogic.UISkin,
+                        new Rect(0.5f, 0.5f, 150f, 30f),
+                        new DialogGUIFlexibleSpace(),
+                        vertLayout),
+                    false,
+                    HighLogic.UISkin);
+            }
+
+            void LoadPreset(ConfigNode node)
+            {
+                
+                foreach (LabelRec rec in labelList)
+                {
+                    String value = node.GetValue("AG" + rec.ActionGroup);
+
+                    if (value.Length > 0)
+                    {
+                        rec.Visible = value.Substring(0, 1).Equals("1");
+                        rec.Active = value.Substring(1, 1).Equals("1");
+                        rec.ButtonType = (int.Parse(value.Substring(2, 1)));
+                        rec.Label = value.Substring(3);
+                    }
+                }
+
+                ScreenMessages.PostScreenMessage("Preset " + node.name + " Loaded");
+            }
+
+            void SavePresetPopup()
+            {
+                // Need to prevent keyboard and mouse clicks from passing thru popup.
+                
+                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    new MultiOptionDialog("SavePreset",
+                        "",
+                        "Preset Name",
+                        HighLogic.UISkin,
+                        new Rect(0.5f, 0.5f, 150f, 35f),
+                        new DialogGUIFlexibleSpace(),
+                        new DialogGUIVerticalLayout(
+                            new DialogGUIFlexibleSpace(),
+                            new DialogGUITextInput("Preset 1", false, 25, SavePreset, 25f)
+                            )),
+                    false,
+                    HighLogic.UISkin);
+            }
+
+            String SavePreset(String s)
+            {
+                ConfigNode throwAway = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
+                
+                if (throwAway.HasNode(s))
+                {
+                    ScreenMessages.PostScreenMessage("Preset " + s + " already exists!");
+                } 
+                else
+                {
+                    ConfigNode preset = new ConfigNode(s);
+                    foreach (LabelRec rec in labelList)
+                    {
+                        preset.AddValue("AG" + rec.ActionGroup, rec.Serialise());
+                    }
+                    throwAway.AddNode(preset);
+                    throwAway.Save(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
+
+                    ScreenMessages.PostScreenMessage("Preset " + s + " Saved");
+                    PopupDialog.ClearPopUps();
+                }
+
+                // Using JSON. Not working really b/c JsonUtility has issues with Lists and Arrays both of which I need when Saving and Loading
+                //Preset preset = new Preset(s, labelList);
+                //try
+                //{
+                //    StreamWriter writer = new StreamWriter(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.json", true);
+                //    
+                //    writer.WriteLine(JsonUtility.ToJson(preset, true));
+                //    writer.Close();
+                //}
+                //catch (Exception exp)
+                //{
+                //    Debug.LogError(exp.Message);
+                //}
+
+
+                return s;
+            }
+
+            
 
             void AddToolbarButton()
             {
@@ -396,9 +563,11 @@ namespace AGPanel
             int flightWindowID;
             public static Rect flightWindowPos = new Rect();
             GUIStyle flightButtons;
+            GUIStyle flightButtonsRed;
+
 
             internal const string MODID = "AGPFlight";
-            internal const string MODNAME = "AGPFlight";
+            internal const string MODNAME = "AGP Flight";
             ToolbarControl toolbarControl;
 
             internal static String _AssemblyName { get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; } }
@@ -443,7 +612,18 @@ namespace AGPanel
                     fixedWidth = BUTTON_WIDTH,
                     fixedHeight = BUTTON_HEIGHT
                 };
+
+                flightButtonsRed = new GUIStyle(HighLogic.Skin.GetStyle("button"))
+                {
+                    fontSize = BUTTON_FONTSIZE,
+                    fixedWidth = BUTTON_WIDTH,
+                    fixedHeight = BUTTON_HEIGHT
+                };
+
+                flightButtonsRed.normal.background = redPic;
             }
+
+            
 
             void OnGUI()
             {
@@ -477,12 +657,11 @@ namespace AGPanel
                             {
                                 rec.Active = !rec.Active;
                                 ActivateActionGroup(rec.ActionGroup);
-                                Debug.Log("AGPanel.DrawFlightWindow: Button: " + rec.Label + " is " + rec.Active);
                             }
                         }
                         else
                         {
-                            if (GUILayout.Button(rec.Label, flightButtons)) // Normal Button
+                            if (GUILayout.Button(rec.Label, (rec.ActionGroup == 15 ? flightButtonsRed : flightButtons)))     // Normal Button (Red Button for Abort AG)
                             {
                                 ActivateActionGroup(rec.ActionGroup);
                                 if (rec.ButtonType == 2)  // Click Once then Remove Button
