@@ -10,7 +10,7 @@ The editor is also available in Flight so you can continue to make changes.
 ## Presets
 You also have the ability so save a setup in a preset which can be loaded again later so if for example you want to make Solar Deployment usually be Action Group 1 you can save this as a preset and load the preset for each new vessel.
 
-##TODO
+## TODO
 Still want to improve on the GUI
 Would like to offer additional colours for buttons (Beyond the Abort Group being red)
 Need to make it possible to delete presets (Currently can only be done by editing the text file)
