@@ -144,6 +144,14 @@ namespace AGPanel
         void Start()
         {
             GameEvents.onGameSceneSwitchRequested.Add(UpdateSettingsIfNeeded);
+
+            if (!File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json"))
+            {
+                FileStream fs = File.Create(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json");
+                fs.Close();
+                SaveSettings();
+            }
+
         }
 
         void UpdateSettingsIfNeeded(GameEvents.FromToAction<GameScenes, GameScenes> data)
@@ -186,16 +194,28 @@ namespace AGPanel
         public static void LoadSettings()
         {
 
-            if (File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json"))
+            try
             {
                 StreamReader reader = new StreamReader(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json");
                 agpSettings = JsonUtility.FromJson<AGPSettings>(reader.ReadToEnd());
                 reader.Close();
             }
-            else
+            catch(Exception exp)
             {
-                SaveSettings();
+                Debug.LogError(exp.Message);
             }
+            
+            
+            //if (File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json"))
+            //{
+            //    StreamReader reader = new StreamReader(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/AGPanelSettings.json");
+            //    agpSettings = JsonUtility.FromJson<AGPSettings>(reader.ReadToEnd());
+            //    reader.Close();
+            //}
+            //else
+            //{
+            //    SaveSettings();
+            //}
 
             EditorPanel.editorWindowPos.x = agpSettings.editorPanelX;
             EditorPanel.editorWindowPos.y = agpSettings.editorPanelY;
@@ -420,6 +440,12 @@ namespace AGPanel
             {
                 // Need to prevent keyboard and mouse clicks from passing thru popup.
 
+                if (!File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt"))
+                {
+                    ScreenMessages.PostScreenMessage("Preset File Not Found!\nYou need to Save a preset first");
+                    return;
+                }
+
                 ConfigNode rootNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
 
                 List<DialogGUIBase> guiBaseList = new List<DialogGUIBase>();
@@ -493,9 +519,18 @@ namespace AGPanel
 
             String SavePreset(String s)
             {
-                ConfigNode throwAway = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
-                
-                if (throwAway.HasNode(s))
+                ConfigNode rootNode;
+
+                if (!File.Exists(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt"))
+                {
+                    rootNode = new ConfigNode();
+                }
+                else
+                {
+                    rootNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
+                }
+                    
+                if (rootNode.HasNode(s))
                 {
                     ScreenMessages.PostScreenMessage("Preset " + s + " already exists!");
                 } 
@@ -506,8 +541,8 @@ namespace AGPanel
                     {
                         preset.AddValue("AG" + rec.ActionGroup, rec.Serialise());
                     }
-                    throwAway.AddNode(preset);
-                    throwAway.Save(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
+                    rootNode.AddNode(preset);
+                    rootNode.Save(KSPUtil.ApplicationRootPath + "GameData/AGpanel/PluginsData/Presets.txt");
 
                     ScreenMessages.PostScreenMessage("Preset " + s + " Saved");
                     PopupDialog.ClearPopUps();

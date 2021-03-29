@@ -62,18 +62,22 @@ namespace AGPanel
 
         public override void OnLoad(ConfigNode node)
         {
-            foreach (AGPanel.LabelRec rec in AGPanel.labelList)
+            if (node != null)
             {
-                String value = node.GetValue("AG" + rec.ActionGroup);
-
-                if (value.Length > 0)
+                foreach (AGPanel.LabelRec rec in AGPanel.labelList)
                 {
-                    rec.Visible = value.Substring(0, 1).Equals("1");
-                    rec.Active = value.Substring(1, 1).Equals("1");
-                    rec.ButtonType = (int.Parse(value.Substring(2, 1)));
-                    rec.Label = value.Substring(3);
+                    String value = node.GetValue("AG" + rec.ActionGroup);
+
+                    if (value != null && value.Length > 0)
+                    {
+                        rec.Visible = value.Substring(0, 1).Equals("1");
+                        rec.Active = value.Substring(1, 1).Equals("1");
+                        rec.ButtonType = (int.Parse(value.Substring(2, 1)));
+                        rec.Label = value.Substring(3);
+                    }
                 }
             }
+
             base.OnLoad(node);
         }
     }
