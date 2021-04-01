@@ -71,9 +71,10 @@ namespace AGPanel
                     if (value != null && value.Length > 0)
                     {
                         rec.Visible = value.Substring(0, 1).Equals("1");
-                        rec.Active = value.Substring(1, 1).Equals("1");
-                        rec.ButtonType = (int.Parse(value.Substring(2, 1)));
-                        rec.Label = value.Substring(3);
+                        rec.Critical = value.Substring(1, 1).Equals("1");
+                        rec.Active = value.Substring(2, 1).Equals("1");
+                        rec.ButtonType = (int.Parse(value.Substring(3, 1)));
+                        rec.Label = value.Substring(4);
                     }
                 }
             }

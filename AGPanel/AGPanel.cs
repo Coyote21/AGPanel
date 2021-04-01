@@ -58,9 +58,10 @@ namespace AGPanel
 
 
         //Texture2D normal = GameDatabase.Instance.GetTexture("ScienceRelay/Resources/Relay_Normal", false);
-        public static Texture2D redPic = GameDatabase.Instance.GetTexture("AGPanel/Icon/red", false);
+        public static Texture2D redButtonHover = GameDatabase.Instance.GetTexture("AGPanel/Icon/RedButtonHover", false);
+        public static Texture2D redButtonNormal = GameDatabase.Instance.GetTexture("AGPanel/Icon/RedButtonNormal", false);
+        public static Texture2D redButtonActive = GameDatabase.Instance.GetTexture("AGPanel/Icon/RedButtonActive", false);
         
-
 
         public class AGPSettings
         {
@@ -80,6 +81,7 @@ namespace AGPanel
             public Boolean Active = false;
             public Boolean Visible = false;
             public int ButtonType = 0;
+            public Boolean Critical = false;
 
             public List<String> BtnTypes = new List<String>
             {
@@ -96,11 +98,12 @@ namespace AGPanel
                 this.Active = false;
                 this.Visible = false;
                 this.ButtonType = 0;
+                this.Critical = (actionGroup == 15);
             }
 
             public String Serialise()
             {
-                return (this.Visible ? "1" : "0") + (this.Active ? "1" : "0") + this.ButtonType.ToString() + this.Label;
+                return (this.Visible ? "1" : "0") + (this.Critical ? "1" : "0") + (this.Active ? "1" : "0") + this.ButtonType.ToString() + this.Label;
             }
 
         }
@@ -382,6 +385,7 @@ namespace AGPanel
                 GUILayout.Label("\nLabel", editorHeadingLabel);
                 GUILayout.Label("\nVis", editorHeadingVis);               // Make button visible in flight panel
                 GUILayout.Label("\nType", editorHeadingBtnType);               // Make button Normal button, Toggle button or "One click, then remove" button
+                GUILayout.Label("\nCrit", editorHeadingVis);               // Make button red in flight panel
                 GUILayout.EndHorizontal();
 
                 foreach (LabelRec rec in labelList)
@@ -415,6 +419,8 @@ namespace AGPanel
 
                     // Another alternative, try to do a dropdown selector?
 
+                    // Critical Toggle (Show Red Flight Panel)
+                    rec.Critical = GUILayout.Toggle(rec.Critical, "", toggleLight);
 
                     GUILayout.EndHorizontal();
                 }
@@ -488,9 +494,10 @@ namespace AGPanel
                     if (value.Length > 0)
                     {
                         rec.Visible = value.Substring(0, 1).Equals("1");
-                        rec.Active = value.Substring(1, 1).Equals("1");
-                        rec.ButtonType = (int.Parse(value.Substring(2, 1)));
-                        rec.Label = value.Substring(3);
+                        rec.Critical = value.Substring(1, 1).Equals("1");
+                        rec.Active = value.Substring(2, 1).Equals("1");
+                        rec.ButtonType = (int.Parse(value.Substring(3, 1)));
+                        rec.Label = value.Substring(4);
                     }
                 }
 
@@ -598,7 +605,7 @@ namespace AGPanel
             int flightWindowID;
             public static Rect flightWindowPos = new Rect();
             GUIStyle flightButtons;
-            GUIStyle flightButtonsRed;
+            GUIStyle flightButtonsCritical;
 
 
             internal const string MODID = "AGPFlight";
@@ -648,14 +655,18 @@ namespace AGPanel
                     fixedHeight = BUTTON_HEIGHT
                 };
 
-                flightButtonsRed = new GUIStyle(HighLogic.Skin.GetStyle("button"))
+                flightButtonsCritical = new GUIStyle(HighLogic.Skin.GetStyle("button"))
                 {
                     fontSize = BUTTON_FONTSIZE,
                     fixedWidth = BUTTON_WIDTH,
                     fixedHeight = BUTTON_HEIGHT
                 };
 
-                flightButtonsRed.normal.background = redPic;
+                flightButtonsCritical.normal.background = redButtonNormal;
+                flightButtonsCritical.hover.background = redButtonHover;
+                flightButtonsCritical.focused.background = redButtonHover;
+                flightButtonsCritical.active.background = redButtonActive;
+                flightButtonsCritical.onActive.background = redButtonActive;
             }
 
             
@@ -688,7 +699,7 @@ namespace AGPanel
                         visibleBtnCount++;
                         if (rec.ButtonType == 1) //Toggle Button
                         {
-                            if (GUILayout.Toggle(rec.Active, rec.Label, flightButtons) != rec.Active)
+                            if (GUILayout.Toggle(rec.Active, rec.Label, (rec.Critical ? flightButtonsCritical : flightButtons)) != rec.Active)
                             {
                                 rec.Active = !rec.Active;
                                 ActivateActionGroup(rec.ActionGroup);
@@ -696,7 +707,7 @@ namespace AGPanel
                         }
                         else
                         {
-                            if (GUILayout.Button(rec.Label, (rec.ActionGroup == 15 ? flightButtonsRed : flightButtons)))     // Normal Button (Red Button for Abort AG)
+                            if (GUILayout.Button(rec.Label, (rec.Critical ? flightButtonsCritical : flightButtons)))     // Normal Button (Red Button for Abort AG)
                             {
                                 ActivateActionGroup(rec.ActionGroup);
                                 if (rec.ButtonType == 2)  // Click Once then Remove Button
